@@ -5,6 +5,7 @@ package junittest;
 
 import static org.junit.Assert.*;
 
+import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN;
 
 
@@ -18,13 +19,15 @@ import org.junit.Test;
  */
 public class SDN_CKN_MAIN_Test {
 
+	private static Logger logger=Logger.getLogger(SDN_CKN_MAIN_Test.class);
 	public static SDN_CKN_MAIN puls = new SDN_CKN_MAIN();
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		puls.setK(2);
+		puls.run();
+		
 	}
 
 	/**

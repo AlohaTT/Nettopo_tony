@@ -29,7 +29,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer,Boolean> awake;
 	private int k;// the least awake neighbours
 	boolean needInitialization;
-	private HashMap<String, Integer> flowTable;
 	
 	public SDN_CKN_MAIN(Algorithm algorithm){
 		this.algorithm = algorithm;
@@ -45,9 +44,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 	
 	public void run() {
+		/*
+		 * 初始化
+		 */
 		if(isNeedInitialization()){
 			initializeWork();
-			
 		}
 		SDN_CKN_Function();
 		resetColorAfterCKN();
@@ -114,8 +115,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	
 
 	/**
-	 * ranks, neighbors, neighborsOf2Hops, won't change with time
-	 * and if you don't delete nodes, the nodes,coordinates won't change either.
+	 * 初始化工作，令所有节点为工作状态，并保存1-hop邻居节点
+	 * 
 	 */
 	private void initializeWork(){
 		app = NetTopoApp.getApp();
@@ -240,7 +241,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 	
 	private void SDN_CKN_Function(){
-		initializeNeighbors();
 		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
 		for(int i=0;i<disordered.length;i++){
 			int currentID = disordered[i];
