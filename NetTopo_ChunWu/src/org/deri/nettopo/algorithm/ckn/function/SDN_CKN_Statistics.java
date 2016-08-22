@@ -1,5 +1,6 @@
 package org.deri.nettopo.algorithm.ckn.function;
 
+import org.apache.log4j.Logger;
 import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.network.*;
 import org.deri.nettopo.node.SensorNode;
@@ -8,7 +9,9 @@ import org.deri.nettopo.util.*;
 import java.util.*;
 import java.io.*;
 
-public class CKN_Statistics {
+public class SDN_CKN_Statistics {
+	private static Logger logger=Logger.getLogger(SDN_CKN_Statistics.class);
+	
 	private static final int SEED_NUM = 100;
 
 	private static final int NET_WIDTH = 800;
@@ -38,7 +41,7 @@ public class CKN_Statistics {
 	/** logWriter is to write to the file of "C:/CKN_Stat.log"*/
 	private PrintWriter logWriter;
 	
-	public CKN_Statistics() throws Exception {
+	public SDN_CKN_Statistics() throws Exception {
 		maxK = 10;
 		seedNum = SEED_NUM;
 		sensorNodeNum = 0;
@@ -113,12 +116,12 @@ public class CKN_Statistics {
 				wsn.addNode(sNode, coordinates[j]);
 			}
 			
-			CKN_MAIN ckn = new CKN_MAIN();
+			SDN_CKN_MAIN ckn = new SDN_CKN_MAIN();
 			ckn.setK(k);
 			ckn.runForStatistics();
 			int sleepNum = nodeNum - wsn.getSensorNodesActiveNum();
 			float sleepRate = sleepNum * 1.0f / nodeNum;
-			CKNStatisticsMeta meta = new CKNStatisticsMeta(k,nodeNum,sleepNum,sleepRate);
+			SDN_CKNStatisticsMeta meta = new SDN_CKNStatisticsMeta(k,nodeNum,sleepNum,sleepRate);
 			System.out.println(meta);
 			if(sleepRate > maxRate){
 				maxRate = sleepRate;
@@ -133,7 +136,7 @@ public class CKN_Statistics {
 		}
 		
 		double totalAverageSleepRate = totalSleepNum * 1.0f / totalNum;
-		CKNStatisticsMeta oneMeta = new CKNStatisticsMeta(k,nodeNum,nodeNum * totalAverageSleepRate,totalAverageSleepRate);
+		SDN_CKNStatisticsMeta oneMeta = new SDN_CKNStatisticsMeta(k,nodeNum,nodeNum * totalAverageSleepRate,totalAverageSleepRate);
 		logWriter.println(oneMeta.toString() + "          " +maxRateStr + "  " + minRateStr);
 		logWriter.flush();
 	}
@@ -166,12 +169,13 @@ public class CKN_Statistics {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		CKN_Statistics statistics = new CKN_Statistics();
-		System.out.println(CKNStatisticsMeta.outputHeader());
-		statistics.getLogWriter().println(CKNStatisticsMeta.NET_INFO_HEAD());
-		statistics.getLogWriter().println(CKNStatisticsMeta.outputHeader());
+		SDN_CKN_Statistics statistics = new SDN_CKN_Statistics();
+		System.out.println(SDN_CKNStatisticsMeta.outputHeader());
+		statistics.getLogWriter().println(SDN_CKNStatisticsMeta.NET_INFO_HEAD());
+		statistics.getLogWriter().println(SDN_CKNStatisticsMeta.outputHeader());
 		
-		/* i decides the k
+		/* 
+		 * i decides the k
 		 * j*100 decides the nodeNum
 		 * */
 		for(int i=1;i<=statistics.getMaxK();i++){
@@ -186,9 +190,9 @@ public class CKN_Statistics {
 
 }
 
-class CKNStatisticsMeta implements Serializable{
-	private static int NET_WIDTH = CKN_Statistics.getNET_WIDTH();
-	private static int NET_HEIGHT = CKN_Statistics.getNET_HEIGHT();
+class SDN_CKNStatisticsMeta implements Serializable{
+	private static int NET_WIDTH = SDN_CKN_Statistics.getNET_WIDTH();
+	private static int NET_HEIGHT = SDN_CKN_Statistics.getNET_HEIGHT();
 	
 	public static int getNET_WIDTH() {
 		return NET_WIDTH;
@@ -203,21 +207,21 @@ class CKNStatisticsMeta implements Serializable{
 	private double sleepNodes;
 	private double sleepRate;
 	
-	public CKNStatisticsMeta(){
+	public SDN_CKNStatisticsMeta(){
 		k = 0;
 		sleepNodes = 0;
 		totalNodes = 0;
 		sleepRate = sleepNodes  / totalNodes;
 	}
 	
-	public CKNStatisticsMeta(int k, int totalNodes, int sleepNodes, float sleepRate){
+	public SDN_CKNStatisticsMeta(int k, int totalNodes, int sleepNodes, float sleepRate){
 		this.k = k;
 		this.totalNodes = totalNodes;
 		this.sleepNodes = sleepNodes;
 		this.sleepRate = sleepRate;
 	}
 	
-	public CKNStatisticsMeta(int k, int totalNodes, double sleepNodes, double sleepRate){
+	public SDN_CKNStatisticsMeta(int k, int totalNodes, double sleepNodes, double sleepRate){
 		this.k = k;
 		this.totalNodes = totalNodes;
 		this.sleepNodes = sleepNodes;

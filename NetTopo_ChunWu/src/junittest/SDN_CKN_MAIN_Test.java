@@ -1,0 +1,109 @@
+/**
+ * 
+ */
+package junittest;
+
+import static org.junit.Assert.*;
+
+import org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN;
+
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+/**
+ * @author Tony
+ *
+ */
+public class SDN_CKN_MAIN_Test {
+
+	public static SDN_CKN_MAIN puls = new SDN_CKN_MAIN();
+	/**
+	 * @throws java.lang.Exception
+	 */
+	@Before
+	public void setUp() throws Exception {
+		puls.setK(2);
+	}
+
+	/**
+	 * @throws java.lang.Exception
+	 */
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#SDN_CKN_MAIN(org.deri.nettopo.algorithm.Algorithm)}.
+	 */
+	@Test
+	public void testSDN_CKN_MAINAlgorithm() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#SDN_CKN_MAIN()}.
+	 */
+	@Test
+	public void testSDN_CKN_MAIN() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#run()}.
+	 */
+	@Test
+	public void testRun() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#runForStatistics()}.
+	 */
+	@Test
+	public void testRunForStatistics() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#getAlgorithm()}.
+	 */
+	@Test
+	public void testGetAlgorithm() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#isNeedInitialization()}.
+	 */
+	@Test
+	public void testIsNeedInitialization() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#setNeedInitialization(boolean)}.
+	 */
+	@Test
+	public void testSetNeedInitialization() {
+		fail("Not yet implemented");
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#getK()}.
+	 */
+	@Test
+	public void testGetK() {
+		assertEquals(2, puls.getK());
+	}
+
+	/**
+	 * Test method for {@link org.deri.nettopo.algorithm.ckn.function.SDN_CKN_MAIN#setK(int)}.
+	 */
+	@Test
+	public void testSetK() {
+		fail("Not yet implemented");
+	}
+
+}
