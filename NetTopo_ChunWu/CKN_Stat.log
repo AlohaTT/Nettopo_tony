@@ -1,0 +1,11 @@
+********************************************************************
+*** This file gives the statistical simulation results including ***
+*** sleep node number, total node number, sleep Rate in the WSN  ***
+*** and the k value which is need for the CKN algorithm          ***
+***     --------------  Network Size: 800*600 --------------     ***
+********************************************************************
+
+
+
+   k    totalNodes    sleepNodes    sleepRate
+   1       100          2.30          0.02          max sleep rate: 0.05999999865889549  min sleep rate: 0.0

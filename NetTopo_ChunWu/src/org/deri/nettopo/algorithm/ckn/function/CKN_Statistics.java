@@ -45,7 +45,7 @@ public class CKN_Statistics {
 		netSize = new Coordinate(NET_WIDTH, NET_HEIGHT, 0);
 		max_tr = MAX_TR;
 		wsn = new WirelessSensorNetwork();
-		logWriter = new PrintWriter("E:/CKN_Stat.log");
+		logWriter = new PrintWriter("src/CKN_Stat.log");
 		
 		wsn.setSize(netSize);
 		NetTopoApp.getApp().setNetwork(wsn);
