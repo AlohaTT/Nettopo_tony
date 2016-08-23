@@ -20,13 +20,13 @@ import org.junit.Test;
 public class SDN_CKN_MAIN_Test {
 
 	private static Logger logger=Logger.getLogger(SDN_CKN_MAIN_Test.class);
-	public static SDN_CKN_MAIN puls = new SDN_CKN_MAIN();
+	public static SDN_CKN_MAIN sdn = new SDN_CKN_MAIN();
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		puls.run();
+		sdn.run();
 		
 	}
 
@@ -35,6 +35,7 @@ public class SDN_CKN_MAIN_Test {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		
 	}
 
 	/**
@@ -98,7 +99,7 @@ public class SDN_CKN_MAIN_Test {
 	 */
 	@Test
 	public void testGetK() {
-		assertEquals(2, puls.getK());
+		assertEquals(2, sdn.getK());
 	}
 
 	/**

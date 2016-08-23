@@ -46,6 +46,9 @@ public class TPGF_ConnectNeighbors implements AlgorFunc {
 		WirelessSensorNetwork wsn = app.getNetwork();
 		Painter painter = app.getPainter();
 		
+		/*
+		 * 连接sensor的邻居节点
+		 */
 		Collection<VNode> sensorNodes = wsn.getNodes("org.deri.nettopo.node.tpgf.SensorNode_TPGF",true);
 		sensorNodes = getActiveSensorNode(sensorNodes);
 		

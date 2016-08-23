@@ -14,6 +14,7 @@ import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
+import org.deri.nettopo.node.sdn.Controller_SinkNode;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
@@ -32,8 +33,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	
 	public SDN_CKN_MAIN(Algorithm algorithm){
 		this.algorithm = algorithm;
-		neighbors = new HashMap<Integer,Integer[]>();
-		awake = new HashMap<Integer,Boolean>();
+		Controller_SinkNode controller = new Controller_SinkNode();
+		neighbors = controller.getNeighbors();
+		awake = controller.getAwakeNodes();
 		k = 1;
 		needInitialization = true;
 	}
@@ -90,6 +92,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		}
 	}
 	
+	/**
+	 * 初始化邻居节点表
+	 */
 	private void initializeNeighbors(){
 		int[] ids = wsn.getAllSensorNodesID();
 		for(int i=0;i<ids.length;i++){
@@ -98,8 +103,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			neighbors.put(ID, neighbor);
 		}
 	} 
-	
 	private Integer[] getNeighbor(int id){
+		
 		int[] ids = wsn.getAllSensorNodesID();
 		ArrayList<Integer> neighbor = new ArrayList<Integer>();
 		int maxTR = Integer.parseInt(wsn.getNodeByID(id).getAttrValue("Max TR"));
@@ -130,7 +135,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	
 	/************the following methods are to be used in CKN_Function*************/
 	
-	
+	/*
+	 * 获得邻居节点中处于工作状态的节点id集合
+	 */
 	private Integer[] getAwakeNeighbors(int id){
 		HashSet<Integer> nowAwakeNeighbor = new HashSet<Integer>();
 		Integer[] neighbor = neighbors.get(new Integer(id));
@@ -142,7 +149,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		return nowAwakeNeighbor.toArray(new Integer[nowAwakeNeighbor.size()]);
 	}
 	
-	
+	/*
+	 * 判断处于工作状态的邻居节点的数量是否小于k
+	 */
 	private boolean isOneOfAwakeNeighborsNumLessThanK(int id){
 		boolean result = false;
 		Integer[] nowAwakeNeighbors = getAwakeNeighbors(id);
@@ -239,13 +248,14 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			}
 		}
 	}
-	
+	/**
+	 * SDN_CKN主要步骤
+	 */
 	private void SDN_CKN_Function(){
 		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
 		for(int i=0;i<disordered.length;i++){
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);// Nu is the currentAwakeNeighbor
-			
 		}
 	}
 	
@@ -257,6 +267,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		return needInitialization;
 	}
 
+	
 	public void setNeedInitialization(boolean needInitialization) {
 		this.needInitialization = needInitialization;
 	}

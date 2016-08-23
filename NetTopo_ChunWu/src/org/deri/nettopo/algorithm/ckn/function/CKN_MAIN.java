@@ -37,7 +37,7 @@ public class CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer,Integer[]> neighbors;
 	private HashMap<Integer,Integer[]> neighborsOf2Hops;
 	private HashMap<Integer,Boolean> awake;
-	private int k;// the least awake neighbours
+	private int k;// the least awake neighbors
 	boolean needInitialization;
 	
 	
@@ -308,11 +308,11 @@ public class CKN_MAIN implements AlgorFunc {
 		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
 		for(int i=0;i<disordered.length;i++){
 			int currentID = disordered[i];
-			Integer[] Nu = getAwakeNeighbors(currentID);// Nu is the currentAwakeNeighbor
+			Integer[] Nu = getAwakeNeighbors(currentID);// Nu 是邻居节点中处于工作状态的所有节点集合
 			if(Nu.length < k || isOneOfAwakeNeighborsNumLessThanK(currentID)){
 				this.setAwake(currentID, true);
 			}else{
-				Integer[] Cu = getCu(currentID);// Cu is related to the rank
+				Integer[] Cu = getCu(currentID);// Cu 是处于工作状态邻居节点中rank值比u的rank值小的节点集合
 				int[] awakeNeighborsOf2HopsLessThanRanku = Util.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(currentID));
 				if(atLeast_k_Neighbors(Nu, Cu) && qualifiedConnectedInCu(Cu,awakeNeighborsOf2HopsLessThanRanku)){
 					setAwake(currentID, false);
