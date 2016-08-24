@@ -313,7 +313,7 @@ public class GPSR_Statistics {
 		stat.avgPathNums = avgPathNums;
 		stat.avgHopNums = avgHopNums;
 		oos.writeObject(stat);
-		
+		oos.close();
 	}
 }
 

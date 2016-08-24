@@ -15,6 +15,7 @@ import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
 import org.deri.nettopo.node.sdn.Controller_SinkNode;
+import org.deri.nettopo.node.sdn.FlowTable;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
@@ -28,8 +29,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private NetTopoApp app;
 	private HashMap<Integer,Integer[]> neighbors;
 	private HashMap<Integer,Boolean> awake;
-	private int k;// the least awake neighbours
+	private int k;// the least awake neighbors
 	boolean needInitialization;
+	private HashMap<Integer, FlowTable> flowTable;
 	
 	public SDN_CKN_MAIN(Algorithm algorithm){
 		this.algorithm = algorithm;
@@ -47,7 +49,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	
 	public void run() {
 		/*
-		 * åˆå§‹åŒ–
+		 * ³õÊ¼»¯
 		 */
 		if(isNeedInitialization()){
 			initializeWork();
@@ -93,7 +95,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 	
 	/**
-	 * åˆå§‹åŒ–é‚»å±…èŠ‚ç‚¹è¡¨
+	 * ³õÊ¼»¯ÁÚ¾Ó½Úµã±í
 	 */
 	private void initializeNeighbors(){
 		int[] ids = wsn.getAllSensorNodesID();
@@ -120,7 +122,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	
 
 	/**
-	 * åˆå§‹åŒ–å·¥ä½œï¼Œä»¤æ‰€æœ‰èŠ‚ç‚¹ä¸ºå·¥ä½œçŠ¶æ€ï¼Œå¹¶ä¿å­˜1-hopé‚»å±…èŠ‚ç‚¹
+	 * ³õÊ¼»¯¹¤×÷£¬ÁîËùÓĞ½ÚµãÎª¹¤×÷×´Ì¬£¬²¢±£´æ1-hopÁÚ¾Ó½Úµã
 	 * 
 	 */
 	private void initializeWork(){
@@ -136,7 +138,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	/************the following methods are to be used in CKN_Function*************/
 	
 	/*
-	 * è·å¾—é‚»å±…èŠ‚ç‚¹ä¸­å¤„äºå·¥ä½œçŠ¶æ€çš„èŠ‚ç‚¹idé›†åˆ
+	 * »ñµÃÁÚ¾Ó½ÚµãÖĞ´¦ÓÚ¹¤×÷×´Ì¬µÄ½Úµãid¼¯ºÏ
 	 */
 	private Integer[] getAwakeNeighbors(int id){
 		HashSet<Integer> nowAwakeNeighbor = new HashSet<Integer>();
@@ -150,7 +152,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 	
 	/*
-	 * åˆ¤æ–­å¤„äºå·¥ä½œçŠ¶æ€çš„é‚»å±…èŠ‚ç‚¹çš„æ•°é‡æ˜¯å¦å°äºk
+	 * ÅĞ¶Ï´¦ÓÚ¹¤×÷×´Ì¬µÄÁÚ¾Ó½ÚµãµÄÊıÁ¿ÊÇ·ñĞ¡ÓÚk
 	 */
 	private boolean isOneOfAwakeNeighborsNumLessThanK(int id){
 		boolean result = false;
@@ -249,7 +251,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		}
 	}
 	/**
-	 * SDN_CKNä¸»è¦æ­¥éª¤
+	 * SDN_CKNÖ÷Òª²½Öè
 	 */
 	private void SDN_CKN_Function(){
 		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());

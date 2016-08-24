@@ -110,7 +110,7 @@ public class TPGF_Statistics_MoreInfo {
 		stat.avgOrHopNums = avgOrHopNums;
 		stat.avgOpHopNums = avgOpHopNums;
 		oos.writeObject(stat);
-		
+		oos.close();
 		
 		FileInputStream fis = new FileInputStream("C:/TPGF_Stat.meta");
 		ObjectInputStream ois = new ObjectInputStream(fis);
@@ -133,5 +133,6 @@ public class TPGF_Statistics_MoreInfo {
 				System.out.println(avgOp[i][j]);
 			}
 		}
+		ois.close();
 	}
 }

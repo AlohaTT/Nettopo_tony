@@ -1,13 +1,11 @@
 package org.deri.nettopo.node.localization.dvhop;
 
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.lang.Math;
 
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.localization.DVHopNode;
-import org.deri.nettopo.util.*;
+import org.deri.nettopo.util.Coordinate;
 
 import Jama.Matrix;
 
