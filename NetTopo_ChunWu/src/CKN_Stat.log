@@ -8,4 +8,4 @@
 
 
    k    totalNodes    sleepNodes    sleepRate
-   1       100          2.33          0.02          max sleep rate: 0.10000000149011612  min sleep rate: 0.0
+   1       100          2.43          0.02          max sleep rate: 0.07999999821186066  min sleep rate: 0.0
