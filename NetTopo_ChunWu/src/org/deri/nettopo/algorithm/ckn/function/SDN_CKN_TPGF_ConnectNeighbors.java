@@ -12,13 +12,13 @@ import org.deri.nettopo.app.NetTopoApp;
 public class SDN_CKN_TPGF_ConnectNeighbors implements AlgorFunc {
 
 	private Algorithm algorithm;
-	private CKN_MAIN ckn;
+	private SDN_CKN_MAIN ckn;
 	private TPGF_ConnectNeighbors connectNeighbors;
 	
 	
 	public SDN_CKN_TPGF_ConnectNeighbors(Algorithm algorithm){
 		this.algorithm = algorithm;
-		ckn = new CKN_MAIN();
+		ckn = new SDN_CKN_MAIN();
 		connectNeighbors = new TPGF_ConnectNeighbors();
 	}
 	

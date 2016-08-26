@@ -331,7 +331,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			if (flagS.get(currentID)){
 				
 				setM(getNeighbor(currentID)[0], false);
-				logger.info(getNeighbor(currentID)[0]+" can go to sleep"+flagM.get(getNeighbor(currentID)[0]));
+				logger.info(getNeighbor(currentID)[0]+" can go to sleep "+flagM.get(getNeighbor(currentID)[0]));
 			}
 			else {
 				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
