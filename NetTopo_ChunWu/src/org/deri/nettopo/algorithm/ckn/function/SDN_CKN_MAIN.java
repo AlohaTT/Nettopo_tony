@@ -47,7 +47,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		neighbors = new HashMap<Integer, Integer[]>();
 		awake = new HashMap<Integer, Boolean>();
 		flagS = new HashMap<Integer, Boolean>();
-		flagM = new HashMap<Integer,Boolean>();
+		flagM = new HashMap<Integer, Boolean>();
 		k = 1;
 		needInitialization = true;
 	}
@@ -136,7 +136,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		return neighbor.toArray(new Integer[neighbor.size()]);
 	}
 
-	
 	private void initializeWork() {
 		app = NetTopoApp.getApp();
 		wsn = app.getNetwork();
@@ -328,17 +327,17 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
 			 */
 			// 判断S是否为false，如果为false，检查S是否为1
-			if (flagS.get(currentID)){
-				
+			if (flagS.get(currentID)) {
+
 				setM(getNeighbor(currentID)[0], false);
-				logger.info(getNeighbor(currentID)[0]+" can go to sleep "+flagM.get(getNeighbor(currentID)[0]));
-			}
-			else {
+				logger.info(getNeighbor(currentID)[0] + " can go to sleep " + flagM.get(getNeighbor(currentID)[0]));
+			} else {
 				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
 				if (flagM.get(currentID)) {
-					//do something
+					// do something
 				} else {
-					//stay awake
+					// stay awake
+					//logger.info(getNeighbor(currentID)[0] + " can go to sleep " + flagM.get(getNeighbor(currentID)[0]));
 				}
 			}
 		}
