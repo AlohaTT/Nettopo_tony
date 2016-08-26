@@ -10,7 +10,7 @@ import java.util.*;
 import java.io.*;
 
 public class SDN_CKN_Statistics {
-	private static Logger logger = Logger.getLogger(SDN_CKN_Statistics.class);
+//	private static Logger logger = Logger.getLogger(SDN_CKN_Statistics.class);
 
 	private static final int SEED_NUM = 100;
 

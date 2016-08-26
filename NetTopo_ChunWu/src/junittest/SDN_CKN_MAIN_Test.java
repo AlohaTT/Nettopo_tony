@@ -19,7 +19,7 @@ import org.junit.Test;
  */
 public class SDN_CKN_MAIN_Test {
 
-	private static Logger logger=Logger.getLogger(SDN_CKN_MAIN_Test.class);
+//	private static Logger logger=Logger.getLogger(SDN_CKN_MAIN_Test.class);
 	public static SDN_CKN_MAIN sdn = new SDN_CKN_MAIN();
 	/**
 	 * @throws java.lang.Exception

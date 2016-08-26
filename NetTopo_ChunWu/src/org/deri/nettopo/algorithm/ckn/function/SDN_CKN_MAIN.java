@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
 import org.deri.nettopo.algorithm.Algorithm;
 import org.deri.nettopo.app.NetTopoApp;
@@ -19,6 +20,11 @@ import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
 /*
+ * 1.flagS标志sensor的邻居节点是否为1个，如果为true，则指定这个邻居节点的
+ * flagM为false；如果为false，则进行下一步判断；
+ * 2.flagM标志sensor是否能进入睡眠状态（初始状态全为true），如果flagM为false
+ * 则令sensor处于awake状态，如果flagM为true，则进行下一步分析；
+ * 
  * 
  */
 public class SDN_CKN_MAIN implements AlgorFunc {
@@ -33,6 +39,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer, Boolean> awake;
 	private int k;// the least awake neighbors
 	boolean needInitialization;
+
+	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -144,7 +152,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private void initializeM() {
 		int[] ids = wsn.getAllSensorNodesID();
 		for (int i = 0; i < ids.length; i++) {
-			setM(ids[i], false);
+			setM(ids[i], true);
 		}
 	}
 
@@ -320,14 +328,17 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
 			 */
 			// 判断S是否为false，如果为false，检查S是否为1
-			if (flagS.get(currentID))
-				setM(getNeighbor(currentID)[0], true);
+			if (flagS.get(currentID)){
+				
+				setM(getNeighbor(currentID)[0], false);
+				logger.info(getNeighbor(currentID)[0]+" can go to sleep"+flagM.get(getNeighbor(currentID)[0]));
+			}
 			else {
 				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
 				if (flagM.get(currentID)) {
-
+					//do something
 				} else {
-
+					//stay awake
 				}
 			}
 		}
