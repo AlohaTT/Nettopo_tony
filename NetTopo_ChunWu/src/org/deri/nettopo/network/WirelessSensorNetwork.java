@@ -397,6 +397,18 @@ public class WirelessSensorNetwork implements Serializable {
 
 		return result.toString();
 	}
-
+	public int[] getSinkNodeId() {
+		int[] allNodesId = this.getAllNodesID();
+		LinkedList<Integer> array = new LinkedList<Integer>();
+		for(int i=0;i<allNodesId.length;i++){
+			if(getNodeByID(allNodesId[i]).getClass().getSimpleName().contains("SinkNode")){
+				array.add(allNodesId[i]);
+			}
+		}
+		Integer[] result = array.toArray(new Integer[array.size()]);
+		
+		return Util.IntegerArray2IntArray(result);
+		
+	}
 
 }
