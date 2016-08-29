@@ -326,7 +326,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			 * qualifiedConnectedInCu(Cu,awakeNeighborsOf2HopsLessThanRanku)){
 			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
 			 */
-			// 判断S是否为false，如果为false，检查S是否为1
+
 			if (flagS.get(currentID)) {
 
 				setM(getNeighbor(currentID)[0], false);
@@ -335,9 +335,15 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
 				if (flagM.get(currentID)) {
 					// do something
+					if (getNeighbor(currentID).length <= k) {
+						setAwake(currentID, true);
+					} else {
+						
+					}
 				} else {
 					// stay awake
-					//logger.info(getNeighbor(currentID)[0] + " can go to sleep " + flagM.get(getNeighbor(currentID)[0]));
+					// logger.info(getNeighbor(currentID)[0] + " can go to sleep
+					// " + flagM.get(getNeighbor(currentID)[0]));
 				}
 			}
 		}
