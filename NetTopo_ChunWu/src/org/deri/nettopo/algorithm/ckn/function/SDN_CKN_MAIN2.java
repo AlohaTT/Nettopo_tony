@@ -19,6 +19,7 @@ import org.deri.nettopo.node.SensorNode;
 import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
+import org.eclipse.core.commands.common.NotDefinedException;
 
 /*
  * 1.flagS标志sensor的邻居节点是否为1个，如果为true，则指定这个邻居节点的
@@ -36,6 +37,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 	private HashMap<Integer, Double> ranks;
 	private HashMap<Integer, Integer[]> neighbors;
 	private HashMap<Integer, Boolean> awake;
+	private HashMap<Integer, Integer[]> awakeNeighbors;
 	private int k;// the least awake neighbors
 	boolean needInitialization;
 	private HashMap<Integer, Boolean> flagS; // 标志sensor是否只有一个neighbor
@@ -51,6 +53,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 		flagS = new HashMap<Integer, Boolean>();
 		flagM = new HashMap<Integer, Boolean>();
 		k = 1;
+		header = new HashMap<Integer, PacketHeader>();
 		needInitialization = true;
 	}
 
@@ -318,6 +321,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 		// sinkNode id 放到数组的最后一个位置
 		int[] disordered = Arrays.copyOf(temp, temp.length + 1);
 		disordered[disordered.length - 1] = wsn.getSinkNodeId()[0];
+		int controllerId = disordered[disordered.length - 1];
 		for (int i = 0; i < disordered.length; i++) {
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);
@@ -331,7 +335,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 			 * qualifiedConnectedInCu(Cu,awakeNeighborsOf2HopsLessThanRanku)){
 			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
 			 */
-
+			PacketHeader packetHeader = header.get(currentID);
 			if (flagS.get(currentID)) {
 
 				setM(getNeighbor(currentID)[0], false);
@@ -339,13 +343,35 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 			} else {
 				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
 				if (flagM.get(currentID)) {
-					// do something
-					if (header.get(currentID).type == 1 && getNeighbor(currentID).length <= k) {
-						header.get(currentID).flag=0;
-						
-						setAwake(currentID, true);
-					} else {
+					// Flow Table when a node has less or equal to k number of
+					// neighbor
+					if (packetHeader.getType() == 0) {
+						if (getNeighbor(currentID).length <= k) {
 
+							packetHeader.setFlag(0);
+							packetHeader.setDestination(controllerId);
+							packetHeader.setPriority(1);
+							setAwake(currentID, true);
+						} else {
+							// neighbor
+							// Flow Table when a node has greater than k number
+							// of
+							packetHeader.setFlag(1);
+							packetHeader.setDestination(controllerId);
+							packetHeader.setPriority(0);
+						}
+						if (packetHeader.getPriority() == 1) {
+							packetHeader.setDestination(awake);
+						} else {
+							packetHeader.setNextHopId(nextHopId);
+						}
+					} else if (packetHeader.getType() == 1) {
+						if (packetHeader.getDestination() == nodeid) {
+							packetHeader.setState(1);
+
+						} else {
+							packetHeader.setNextHopId(nextHopId);
+						}
 					}
 				} else {
 					// stay awake
