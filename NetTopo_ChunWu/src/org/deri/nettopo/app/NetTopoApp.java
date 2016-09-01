@@ -726,7 +726,7 @@ public class NetTopoApp {
 		});
 
 		/* Dynamically create the Algorithm submenu */
-		/* ½«ĞÂµÄËã·¨¼ÓÔÚÎÄ¼şalgorithm.propertiesÀïÃæ£¬¼´¿ÉÔÚ²Ëµ¥ÖĞ¿´µ½£¬ÒªÓĞÏàÓ¦µÄÀà*/
+		/* å°†æ–°çš„ç®—æ³•åŠ åœ¨æ–‡ä»¶algorithm.propertiesé‡Œé¢ï¼Œå³å¯åœ¨èœå•ä¸­çœ‹åˆ°ï¼Œè¦æœ‰ç›¸åº”çš„ç±»*/
 		submenu_algorithm = new Menu(mi_algorithm);
 		mi_algorithm.setMenu(submenu_algorithm);
 
@@ -738,7 +738,7 @@ public class NetTopoApp {
 			while ((property = br.readLine()) != null) {
 
 				if (property.trim().startsWith("#")) {
-					continue;/*#ÊÇ×¢ÊÍ·û£¬½«Ëã·¨´Ó²Ëµ¥ÖĞ×¢ÊÍµô*/
+					continue;/*#æ˜¯æ³¨é‡Šç¬¦ï¼Œå°†ç®—æ³•ä»èœå•ä¸­æ³¨é‡Šæ‰*/
 				}
 				String name, description;
 				int index = property.indexOf("=");
