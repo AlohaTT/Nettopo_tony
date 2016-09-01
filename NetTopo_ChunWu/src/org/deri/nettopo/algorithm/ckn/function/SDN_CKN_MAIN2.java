@@ -102,6 +102,14 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 		return tempRanks;
 	}
 
+	private void setAwakeNeighborsById() {
+		int[] ids = wsn.getAllSensorNodesID();
+		for (int i = 0; i < ids.length; i++) {
+			int id = ids[i];
+			awakeNeighbors.put(id, getAwakeNeighbors(id));
+		}
+	}
+
 	private void initializeAwake() {
 		int ids[] = wsn.getAllSensorNodesID();
 		for (int i = 0; i < ids.length; i++) {
@@ -351,7 +359,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 							packetHeader.setFlag(0);
 							packetHeader.setDestination(controllerId);
 							packetHeader.setPriority(1);
-							setAwake(currentID, true);
+//							setAwake(currentID, true);
 						} else {
 							// neighbor
 							// Flow Table when a node has greater than k number
