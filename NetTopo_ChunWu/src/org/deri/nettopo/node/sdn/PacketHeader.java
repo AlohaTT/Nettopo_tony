@@ -3,8 +3,6 @@
  */
 package org.deri.nettopo.node.sdn;
 
-import java.util.HashMap;
-
 /**
  * @author Tony
  *
@@ -16,11 +14,24 @@ public class PacketHeader {
 	 */
 	private int source; // 标志sensor是否只有一个neighbor
 	private int destination; // 标志sensor是否可以进入睡眠状态
-	private int type;
-	private int numberOfNeighbor;
-	private int flag;
-	private int state;
-	private int priority;
+	private int type;//type为0表示这是control message,为1表示这是update message,为2表示这是data message
+	private int flag;//flag为0表示把message送到1-hop neighbor,flag为1表示把message送到controller
+	private int state;//为0则为睡眠,为1则为醒
+	private int behavior;//behavior为0则为request,为1则为action
+	/**
+	 * @return the behavior
+	 */
+	public int getBehavior() {
+		return behavior;
+	}
+
+	/**
+	 * @param behavior the behavior to set
+	 */
+	public void setBehavior(int behavior) {
+		this.behavior = behavior;
+	}
+
 	private int nextHopId;
 
 	/**
@@ -31,7 +42,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param source the source to set
+	 * @param source
+	 *            the source to set
 	 */
 	public void setSource(int source) {
 		this.source = source;
@@ -45,7 +57,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param destination the destination to set
+	 * @param destination
+	 *            the destination to set
 	 */
 	public void setDestination(int destination) {
 		this.destination = destination;
@@ -59,24 +72,11 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param type the type to set
+	 * @param type
+	 *            the type to set
 	 */
 	public void setType(int type) {
 		this.type = type;
-	}
-
-	/**
-	 * @return the numberOfNeighbor
-	 */
-	public int getNumberOfNeighbor() {
-		return numberOfNeighbor;
-	}
-
-	/**
-	 * @param numberOfNeighbor the numberOfNeighbor to set
-	 */
-	public void setNumberOfNeighbor(int numberOfNeighbor) {
-		this.numberOfNeighbor = numberOfNeighbor;
 	}
 
 	/**
@@ -87,7 +87,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param flag the flag to set
+	 * @param flag
+	 *            the flag to set
 	 */
 	public void setFlag(int flag) {
 		this.flag = flag;
@@ -101,7 +102,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param state the state to set
+	 * @param state
+	 *            the state to set
 	 */
 	public void setState(int state) {
 		this.state = state;
@@ -111,14 +113,15 @@ public class PacketHeader {
 	 * @return the priority
 	 */
 	public int getPriority() {
-		return priority;
+		return behavior;
 	}
 
 	/**
-	 * @param priority the priority to set
+	 * @param priority
+	 *            the priority to set
 	 */
 	public void setPriority(int priority) {
-		this.priority = priority;
+		this.behavior = priority;
 	}
 
 	/**
@@ -129,7 +132,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param nextHopId the nextHopId to set
+	 * @param nextHopId
+	 *            the nextHopId to set
 	 */
 	public void setNextHopId(int nextHopId) {
 		this.nextHopId = nextHopId;

@@ -325,58 +325,32 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 		for (int i = 0; i < disordered.length; i++) {
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);
-			/*
-			 * if(Nu.length < k ||
-			 * isOneOfAwakeNeighborsNumLessThanK(currentID)){
-			 * this.setAwake(currentID, true); }else{ Integer[] Cu =
-			 * getCu(currentID); int[] awakeNeighborsOf2HopsLessThanRanku =
-			 * Util.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(
-			 * currentID)); if(atLeast_k_Neighbors(Nu, Cu) &&
-			 * qualifiedConnectedInCu(Cu,awakeNeighborsOf2HopsLessThanRanku)){
-			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
-			 */
 			PacketHeader packetHeader = header.get(currentID);
-			if (flagS.get(currentID)) {
+			checkPacketHeader(controllerId, currentID, packetHeader);
+		}
+	}
 
-				setM(getNeighbor(currentID)[0], false);
-				logger.info(getNeighbor(currentID)[0] + " can go to sleep " + flagM.get(getNeighbor(currentID)[0]));
-			} else {
-				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
-				if (flagM.get(currentID)) {
-					// Flow Table when a node has less or equal to k number of
-					// neighbor
-					if (packetHeader.getType() == 0) {
-						if (getNeighbor(currentID).length <= k) {
-
-							packetHeader.setFlag(0);
-							packetHeader.setDestination(controllerId);
-							packetHeader.setPriority(1);
-							setAwake(currentID, true);
-						} else {
-							// neighbor
-							// Flow Table when a node has greater than k number
-							// of
-							packetHeader.setFlag(1);
-							packetHeader.setDestination(controllerId);
-							packetHeader.setPriority(0);
-						}
-						if (packetHeader.getPriority() == 1) {
-							packetHeader.setDestination(awake);
-						} else {
-							packetHeader.setNextHopId(nextHopId);
-						}
-					} else if (packetHeader.getType() == 1) {
-						if (packetHeader.getDestination() == nodeid) {
-							packetHeader.setState(1);
-
-						} else {
-							packetHeader.setNextHopId(nextHopId);
-						}
-					}
+	/**
+	 * @param controllerId
+	 * @param currentID
+	 * @param packetHeader
+	 */
+	private void checkPacketHeader(int controllerId, int currentID, PacketHeader packetHeader) {
+		if (packetHeader.getType() == 0) {
+			if (packetHeader.getBehavior() == 0) {
+				if (packetHeader.getFlag() == 0) {
+					setAwake(currentID, true);
+					// send a update message to controller
 				} else {
-					// stay awake
-					// logger.info(getNeighbor(currentID)[0] + " can go to sleep
-					// " + flagM.get(getNeighbor(currentID)[0]));
+
+				}
+			} else {
+				if (packetHeader.getDestination() == currentID) {
+					if (packetHeader.getState() == 0) {
+						setAwake(currentID, false);
+					} else {
+						setAwake(currentID, true);
+					}
 				}
 			}
 		}
