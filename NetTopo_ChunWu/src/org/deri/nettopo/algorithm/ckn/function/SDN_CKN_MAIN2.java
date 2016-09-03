@@ -16,10 +16,10 @@ import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
+import org.deri.nettopo.node.sdn.NeighborTable;
 import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
-import org.eclipse.core.commands.common.NotDefinedException;
 
 /*
  * 1.flagS标志sensor的邻居节点是否为1个，如果为true，则指定这个邻居节点的
@@ -45,6 +45,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 	private HashMap<Integer, PacketHeader> header;
 
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
+	private HashMap<Integer, NeighborTable> hashMap;
 
 	public SDN_CKN_MAIN2(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -52,6 +53,7 @@ public class SDN_CKN_MAIN2 implements AlgorFunc {
 		awake = new HashMap<Integer, Boolean>();
 		flagS = new HashMap<Integer, Boolean>();
 		flagM = new HashMap<Integer, Boolean>();
+		hashMap = new HashMap<Integer,NeighborTable>();
 		k = 1;
 		header = new HashMap<Integer, PacketHeader>();
 		needInitialization = true;
