@@ -1,4 +1,4 @@
-﻿package org.deri.nettopo.algorithm.ckn.function;
+package org.deri.nettopo.algorithm.ckn.function;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,8 @@ import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
+import org.deri.nettopo.node.sdn.NeighborTable;
+import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
@@ -34,11 +36,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private NetTopoApp app;
 	private HashMap<Integer, Double> ranks;
 	private HashMap<Integer, Integer[]> neighbors;
-	private HashMap<Integer, Boolean> flagS; // 标志sensor是否只有一个neighbor
-	private HashMap<Integer, Boolean> flagM; // 标志sensor是否可以进入睡眠状态
 	private HashMap<Integer, Boolean> awake;
 	private int k;// the least awake neighbors
 	boolean needInitialization;
+	private HashMap<Integer, PacketHeader> header;
+	private HashMap<Integer, NeighborTable> neighborTable;
 
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
 
@@ -46,8 +48,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		this.algorithm = algorithm;
 		neighbors = new HashMap<Integer, Integer[]>();
 		awake = new HashMap<Integer, Boolean>();
-		flagS = new HashMap<Integer, Boolean>();
-		flagM = new HashMap<Integer, Boolean>();
+		neighborTable = new HashMap<Integer, NeighborTable>();
+		header = new HashMap<Integer, PacketHeader>();
 		k = 1;
 		needInitialization = true;
 	}
@@ -140,42 +142,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		app = NetTopoApp.getApp();
 		wsn = app.getNetwork();
 		initializeAwake();// at first all are true
-		initializeS();
-		initializeM();
 		setNeedInitialization(false);
-	}
-
-	/**
-	 * 初始化M，初始值为false
-	 */
-	private void initializeM() {
-		int[] ids = wsn.getAllSensorNodesID();
-		for (int i = 0; i < ids.length; i++) {
-			setM(ids[i], true);
-		}
-	}
-
-	/**
-	 * 初始化令S都为false
-	 */
-	private void initializeS() {
-		int ids[] = wsn.getAllSensorNodesID();
-		for (int i = 0; i < ids.length; i++) {
-			if (getNeighbor(ids[i]).length == 1) {
-				setS(ids[i], true);
-			} else {
-				setS(ids[i], false);
-			}
-		}
-	}
-
-	/**
-	 * @param id
-	 * @param S
-	 */
-	private void setS(int id, Boolean s) {
-		Integer ID = new Integer(id);
-		flagS.put(ID, s);
 	}
 
 	/************
@@ -312,61 +279,76 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private void CKN_Function() {
 		ranks = getRankForAllNodes();
 		initializeNeighbors();
-		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
-		for (int i = 0; i < disordered.length; i++) {
+		initialNeiborTable();
+		initializeHeader();
+		int[] temp = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
+		// sinkNode id 放到数组的最后一个位置
+		int[] disordered = Arrays.copyOf(temp, temp.length + 1);
+		disordered[disordered.length - 1] = wsn.getSinkNodeId()[0];
+		int controllerId = disordered[disordered.length - 1];
+		for (int i = 0; i < disordered.length - 1; i++) {
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);
-			/*
-			 * if(Nu.length < k ||
-			 * isOneOfAwakeNeighborsNumLessThanK(currentID)){
-			 * this.setAwake(currentID, true); }else{ Integer[] Cu =
-			 * getCu(currentID); int[] awakeNeighborsOf2HopsLessThanRanku =
-			 * Util.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(
-			 * currentID)); if(atLeast_k_Neighbors(Nu, Cu) &&
-			 * qualifiedConnectedInCu(Cu,awakeNeighborsOf2HopsLessThanRanku)){
-			 * setAwake(currentID, false); }else{ setAwake(currentID, true); } }
-			 */
-
-			if (flagS.get(currentID)) {
-
-				setM(getNeighbor(currentID)[0], false);
-				logger.info(getNeighbor(currentID)[0] + " can go to sleep " + flagM.get(getNeighbor(currentID)[0]));
-			} else {
-				// 判断M,如果M为true，则可以进入睡眠状态，如果为false则不能进入睡眠状态
-				if (flagM.get(currentID)) {
-					// do something
-					if (getNeighbor(currentID).length <= k) {
-						setAwake(currentID, true);
-					} else {
-						
-					}
-				} else {
-					// stay awake
-					// logger.info(getNeighbor(currentID)[0] + " can go to sleep
-					// " + flagM.get(getNeighbor(currentID)[0]));
-				}
-			}
+			PacketHeader packetHeader = header.get(currentID);
+			checkPacketHeader(controllerId, currentID, packetHeader);
 		}
 	}
 
 	/**
-	 * @param id
-	 * @param flagM
+	 * 
 	 */
-	private void setM(int id, Boolean m) {
-		Integer ID = new Integer(id);
-		flagM.put(ID, m);
+	private void initializeHeader() {
+		PacketHeader ph = new PacketHeader();
+		int[] allSensorNodesID = wsn.getAllSensorNodesID();
+		for (int id : allSensorNodesID) {
+			header.put(id, ph);
+		}
+		
+		
 	}
 
 	/**
-	 * 如果sensor的neighbor数等于1，置S标志位为true
 	 * 
-	 * @param currentID
 	 */
-	private void checkNeighborsNumber(int currentID) {
-		if (getNeighbor(currentID).length == 1)
-			setS(currentID, true);
+	private void initialNeiborTable() {
+		int[] allNodesID = wsn.getAllNodesID();
+		
+		for (int currentId : allNodesID) {
+			Integer[] neighborId = getNeighbor(currentId);
+			NeighborTable nt = new NeighborTable();
+			for (int i = 0; i < neighborId.length; i++) {
+				nt.getNeighborIds().add(neighborId[i]);
+				nt.getRank().put(neighborId[i], ranks.get(neighborId[i]));
+				nt.getState().put(neighborId[i], awake.get(neighborId[i]));
+			}
+			neighborTable.put(currentId, nt);
+		}
+	}
 
+	/**
+	 * @param controllerId
+	 * @param currentID
+	 * @param packetHeader
+	 */
+	private void checkPacketHeader(int controllerId, int currentID, PacketHeader packetHeader) {
+		if (packetHeader.getType() == 0) {
+			if (packetHeader.getBehavior() == 0) {
+				if (packetHeader.getFlag() == 0) {
+					setAwake(currentID, true);
+					// send a update message to controller
+				} else {
+
+				}
+			} else {
+				if (packetHeader.getDestination() == currentID) {
+					if (packetHeader.getState() == 0) {
+						setAwake(currentID, false);
+					} else {
+						setAwake(currentID, true);
+					}
+				}
+			}
+		}
 	}
 
 	public Algorithm getAlgorithm() {

@@ -14,10 +14,25 @@ public class PacketHeader {
 	 */
 	private int source; // 标志sensor是否只有一个neighbor
 	private int destination; // 标志sensor是否可以进入睡眠状态
-	private int type;//type为0表示这是control message,为1表示这是update message,为2表示这是data message
-	private int flag;//flag为0表示把message送到1-hop neighbor,flag为1表示把message送到controller
-	private int state;//为0则为睡眠,为1则为醒
-	private int behavior;//behavior为0则为request,为1则为action
+	private int type;// type为0表示这是control message,为1表示这是update
+						// message,为2表示这是data message
+	private int flag;// flag为0表示把message送到1-hop
+						// neighbor,flag为1表示把message送到controller
+	private int state;// 为0则为睡眠,为1则为醒
+	private int behavior;// behavior为0则为request,为1则为action
+
+	/**
+	 * 
+	 */
+	public PacketHeader() {
+		source=0;
+		destination=0;
+		type=0;
+		flag=0;
+		state=0;
+		behavior=0;
+	}
+
 	/**
 	 * @return the behavior
 	 */
@@ -26,7 +41,8 @@ public class PacketHeader {
 	}
 
 	/**
-	 * @param behavior the behavior to set
+	 * @param behavior
+	 *            the behavior to set
 	 */
 	public void setBehavior(int behavior) {
 		this.behavior = behavior;
@@ -137,9 +153,6 @@ public class PacketHeader {
 	 */
 	public void setNextHopId(int nextHopId) {
 		this.nextHopId = nextHopId;
-	}
-
-	public PacketHeader() {
 	}
 
 }
