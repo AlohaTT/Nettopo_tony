@@ -2,10 +2,20 @@ package org.deri.nettopo.node;
 
 import org.eclipse.swt.graphics.RGB;
 import org.deri.nettopo.util.Util;
+
+import java.util.ArrayList;
+
+import org.deri.nettopo.app.NetTopoApp;
+import org.deri.nettopo.network.WirelessSensorNetwork;
+import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.FormatVerifier;
 
 public class SensorNode implements VNode {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int id;
 	private int energy;
 	private int tr; // transmission radius
@@ -17,6 +27,7 @@ public class SensorNode implements VNode {
 	private String[] attrNames;
 	private String errorMsg;
 	private RGB color;
+	private ArrayList<SensorNode> oneHopNeighbors;
 	
 	public SensorNode(){
 		id = 0;
@@ -30,6 +41,8 @@ public class SensorNode implements VNode {
 		attrNames  = new String[]{"Energy", "Max TR", "Bandwidth"};
 		errorMsg = null;
 		color = NodeConfiguration.SensorNodeColorRGB;
+		oneHopNeighbors= new ArrayList<SensorNode>();
+
 	}
 	
 	public void setID(int id){
@@ -172,5 +185,21 @@ public class SensorNode implements VNode {
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+	public  void setOneHopNeighbors(SensorNode node){
+		WirelessSensorNetwork wsn=NetTopoApp.getApp().getNetwork();
+		int id_o=node.getID();
+		Coordinate c=wsn.getCoordianteByID(id);
+		Coordinate co =wsn.getCoordianteByID(id_o);
+		double dis=c.distance(co);
+		if(dis<=maxTR){
+			oneHopNeighbors.add(node);
+		}
+		
+	}
+	
+	public ArrayList<SensorNode> getOneHopNieghbors(){
+		return oneHopNeighbors;
+		
 	}
 }

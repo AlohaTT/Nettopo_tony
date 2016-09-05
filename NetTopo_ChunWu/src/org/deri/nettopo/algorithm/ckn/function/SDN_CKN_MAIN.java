@@ -289,8 +289,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		for (int i = 0; i < disordered.length - 1; i++) {
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);
-			PacketHeader packetHeader = header.get(currentID);
-			checkPacketHeader(controllerId, currentID, packetHeader);
+			checkPacketHeader(controllerId, currentID, header.get(currentID));
 		}
 	}
 
