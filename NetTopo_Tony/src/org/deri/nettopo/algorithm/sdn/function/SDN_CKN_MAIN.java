@@ -2,12 +2,14 @@ package org.deri.nettopo.algorithm.sdn.function;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
@@ -22,10 +24,7 @@ import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
 /*
- * 1.flagS标志sensor的邻居节点是否为1个，如果为true，则指定这个邻居节点的
- * flagM为false；如果为false，则进行下一步判断；
- * 2.flagM标志sensor是否能进入睡眠状态（初始状态全为true），如果flagM为false
- * 则令sensor处于awake状态，如果flagM为true，则进行下一步分析；
+ * 
  * 
  * 
  */
@@ -283,14 +282,38 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		initializeHeader();
 		int[] temp = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
 		// sinkNode id 放到数组的最后一个位置
-		int[] disordered = Arrays.copyOf(temp, temp.length + 1);
-		disordered[disordered.length - 1] = wsn.getSinkNodeId()[0];
-		int controllerId = disordered[disordered.length - 1];
-		for (int i = 0; i < disordered.length - 1; i++) {
-			int currentID = disordered[i];
-			Integer[] Nu = getAwakeNeighbors(currentID);
+//		int[] disordered = Arrays.copyOf(temp, temp.length + 1);
+//		disordered[disordered.length - 1] = wsn.getSinkNodeId()[0];
+//		int controllerId = disordered[disordered.length - 1];
+//		for (int i = 0; i < disordered.length - 1; i++) {
+//			int currentID = disordered[i];
+//			Integer[] Nu = getAwakeNeighbors(currentID);
+//			checkPacketHeader(controllerId, currentID, header.get(currentID));
+//			
+//		}
+		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(temp);
+		int[] sinkNodeId = wsn.getSinkNodeId();
+		int controllerId = sinkNodeId[0];
+		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
+		while (iterator.hasNext()) {
+			Integer currentID = iterator.next();
 			checkPacketHeader(controllerId, currentID, header.get(currentID));
 		}
+	}
+
+	/**
+	 * @param temp
+	 * @return
+	 */
+	private Collection<Integer> getNodeNeighborGreaterThank(int[] temp) {
+		Collection<Integer> nodeNeighborGreaterThanK = new ArrayList<Integer>();
+		for (int currentId : temp) {
+			Integer[] neighbor = getNeighbor(currentId);
+			if (neighbor.length>k) {
+				nodeNeighborGreaterThanK.add(currentId);
+			}
+		}
+		return nodeNeighborGreaterThanK;
 	}
 
 	/**

@@ -13,12 +13,12 @@ import org.deri.nettopo.app.NetTopoApp;
 public class SDN_CKN_TPGF_FindAllPaths implements AlgorFunc {
 
 	private Algorithm algorithm;
-	private CKN_MAIN ckn;
+	private SDN_CKN_MAIN ckn;
 	private TPGF_FindAllPaths findAllPaths;
 	
 	public SDN_CKN_TPGF_FindAllPaths(Algorithm algorithm){
 		this.algorithm = algorithm;
-		ckn = new CKN_MAIN();
+		ckn = new SDN_CKN_MAIN();
 		findAllPaths = new TPGF_FindAllPaths(new Algor_TPGF());
 	}
 	

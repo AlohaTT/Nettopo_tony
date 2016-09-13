@@ -19,7 +19,7 @@ public class NodeConfiguration {
 	public static final RGB SourceNodeColorRGB = new RGB(237,5,64);
 	public static final RGB HostNodeColorRGB = new RGB(250,14,215);
 	public static final RGB AwakeNodeColorRGB = new RGB(36,94,220);
-	public static final RGB SleepNodeColorRGB = new RGB(46,136,58);
+	public static final RGB SleepNodeColorRGB = new RGB(0,0,0);
 	
 	/*for dv-hop*/
 	public static final RGB AnchorNodeColorRGB = new RGB(65,105,225);

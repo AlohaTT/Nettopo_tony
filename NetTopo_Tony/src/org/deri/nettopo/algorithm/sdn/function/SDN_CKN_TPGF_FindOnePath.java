@@ -13,12 +13,12 @@ import org.deri.nettopo.app.NetTopoApp;
 public class SDN_CKN_TPGF_FindOnePath implements AlgorFunc {
 
 	private Algorithm algorithm;
-	private CKN_MAIN ckn;
+	private SDN_CKN_MAIN ckn;
 	private TPGF_FindOnePath findOnePath;
 	
 	public SDN_CKN_TPGF_FindOnePath(Algorithm algorithm){
 		this.algorithm = algorithm;
-		ckn = new CKN_MAIN();
+		ckn = new SDN_CKN_MAIN();
 		findOnePath = new TPGF_FindOnePath(new Algor_TPGF());
 	}
 
