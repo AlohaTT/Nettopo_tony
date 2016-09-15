@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
+import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
@@ -18,8 +18,12 @@ import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
+import org.deri.nettopo.node.SinkNode;
+import org.deri.nettopo.node.VNode;
 import org.deri.nettopo.node.sdn.NeighborTable;
 import org.deri.nettopo.node.sdn.PacketHeader;
+import org.deri.nettopo.node.sdn.SensorNode_SDN;
+import org.deri.nettopo.node.tpgf.SensorNode_TPGF;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
@@ -40,8 +44,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	boolean needInitialization;
 	private HashMap<Integer, PacketHeader> header;
 	private HashMap<Integer, NeighborTable> neighborTable;
+	private HashMap<Integer, Integer[]> neighborsOf2Hops;
 
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
+	private TPGF_FindOnePath_SDN tpgf_FindOnePath;
+	private HashMap<Integer, List<Integer>> routingTable;
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -49,8 +56,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		awake = new HashMap<Integer, Boolean>();
 		neighborTable = new HashMap<Integer, NeighborTable>();
 		header = new HashMap<Integer, PacketHeader>();
+		neighborsOf2Hops = new HashMap<Integer, Integer[]>();
 		k = 1;
 		needInitialization = true;
+		tpgf_FindOnePath = new TPGF_FindOnePath_SDN(algorithm);
+		routingTable = new HashMap<Integer, List<Integer>>();
 	}
 
 	public SDN_CKN_MAIN() {
@@ -120,6 +130,24 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			Integer ID = new Integer(ids[i]);
 			Integer[] neighbor = getNeighbor(ids[i]);
 			neighbors.put(ID, neighbor);
+		}
+	}
+
+	private void initializeNeighborsOf2Hops() {
+		int[] ids = wsn.getAllSensorNodesID();
+		for (int i = 0; i < ids.length; i++) {
+			Integer[] neighbor1 = neighbors.get(new Integer(ids[i]));
+			HashSet<Integer> neighborOf2Hops = new HashSet<Integer>(Arrays.asList(neighbor1));
+			for (int j = 0; j < neighbor1.length; j++) {
+				Integer[] neighbor2 = neighbors.get(new Integer(neighbor1[j]));
+				for (int k = 0; k < neighbor2.length; k++) {
+					neighborOf2Hops.add(neighbor2[k]);
+				}
+			}
+			if (neighborOf2Hops.contains(new Integer(ids[i])))
+				neighborOf2Hops.remove(new Integer(ids[i]));
+
+			neighborsOf2Hops.put(new Integer(ids[i]), neighborOf2Hops.toArray(new Integer[neighborOf2Hops.size()]));
 		}
 	}
 
@@ -280,25 +308,52 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		initializeNeighbors();
 		initialNeiborTable();
 		initializeHeader();
+		initializeNeighborsOf2Hops();
+		routingTable.clear();
 		int[] temp = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
-		// sinkNode id 放到数组的最后一个位置
-//		int[] disordered = Arrays.copyOf(temp, temp.length + 1);
-//		disordered[disordered.length - 1] = wsn.getSinkNodeId()[0];
-//		int controllerId = disordered[disordered.length - 1];
-//		for (int i = 0; i < disordered.length - 1; i++) {
-//			int currentID = disordered[i];
-//			Integer[] Nu = getAwakeNeighbors(currentID);
-//			checkPacketHeader(controllerId, currentID, header.get(currentID));
-//			
-//		}
+
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(temp);
 		int[] sinkNodeId = wsn.getSinkNodeId();
 		int controllerId = sinkNodeId[0];
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
 			Integer currentID = iterator.next();
-			checkPacketHeader(controllerId, currentID, header.get(currentID));
+			Integer[] Nu = getAwakeNeighbors(currentID);
+			if (Nu.length < k || isOneOfAwakeNeighborsNumLessThanK(currentID)) {
+				this.setAwake(currentID, true);
+			} else {
+				Integer[] Cu = getCu(currentID);
+				int[] awakeNeighborsOf2HopsLessThanRanku = Util
+						.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(currentID));
+				if (atLeast_k_Neighbors(Nu, Cu) && qualifiedConnectedInCu(Cu, awakeNeighborsOf2HopsLessThanRanku)) {
+					setAwake(currentID, false);
+					tpgf_FindOnePath.findOnePath(false, currentID);
+					List<Integer> path = tpgf_FindOnePath.getPath();
+					routingTable.put(currentID, path);
+
+					// checkPacketHeader(currentID);
+
+				} else {
+					setAwake(currentID, true);
+				}
+			}
+
+			// checkPacketHeader(currentID, header.get(currentID));
 		}
+		System.out.println("");
+	}
+
+	private Integer[] getAwakeNeighborsOf2HopsLessThanRanku(int id) {
+		Integer[] neighborsOf2HopsOfID = neighborsOf2Hops.get(new Integer(id));
+		Vector<Integer> result = new Vector<Integer>();
+		double ranku = ranks.get(new Integer(id)).doubleValue();
+		for (int i = 0; i < neighborsOf2HopsOfID.length; i++) {
+			if (awake.get(neighborsOf2HopsOfID[i]).booleanValue() && ranks.get(neighborsOf2HopsOfID[i]) < ranku) {
+				result.add(neighborsOf2HopsOfID[i]);
+			}
+		}
+
+		return result.toArray(new Integer[result.size()]);
 	}
 
 	/**
@@ -309,7 +364,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		Collection<Integer> nodeNeighborGreaterThanK = new ArrayList<Integer>();
 		for (int currentId : temp) {
 			Integer[] neighbor = getNeighbor(currentId);
-			if (neighbor.length>k) {
+			if (neighbor.length > k) {
 				nodeNeighborGreaterThanK.add(currentId);
 			}
 		}
@@ -325,8 +380,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		for (int id : allSensorNodesID) {
 			header.put(id, ph);
 		}
-		
-		
+
 	}
 
 	/**
@@ -334,7 +388,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	 */
 	private void initialNeiborTable() {
 		int[] allNodesID = wsn.getAllNodesID();
-		
+
 		for (int currentId : allNodesID) {
 			Integer[] neighborId = getNeighbor(currentId);
 			NeighborTable nt = new NeighborTable();
@@ -352,7 +406,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	 * @param currentID
 	 * @param packetHeader
 	 */
-	private void checkPacketHeader(int controllerId, int currentID, PacketHeader packetHeader) {
+	private void checkPacketHeader(int currentID) {
+		PacketHeader packetHeader = header.get(currentID);
 		if (packetHeader.getType() == 0) {
 			if (packetHeader.getBehavior() == 0) {
 				if (packetHeader.getFlag() == 0) {

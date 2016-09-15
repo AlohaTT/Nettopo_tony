@@ -49,7 +49,7 @@ public class SDN_CKN_TPGF_ConnectNeighbors implements AlgorFunc {
 	
 	public void entry(){
 		ckn.run();
-		connectNeighbors.run();
+//		connectNeighbors.run();
 		final StringBuffer message = new StringBuffer();
 		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
 		message.append("k=" +ckn.getK() +", Number of active nodes is:"+ activeSensorNodes.length +", they are: "+Arrays.toString(activeSensorNodes));
