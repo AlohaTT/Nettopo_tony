@@ -9,20 +9,18 @@ import org.deri.nettopo.algorithm.Algorithm;
 import org.deri.nettopo.algorithm.tpgf.function.TPGF_ConnectNeighbors;
 import org.deri.nettopo.app.NetTopoApp;
 
-public class SDN_CKN_TPGF_ConnectNeighbors implements AlgorFunc {
+public class SDN_BASED_CKN implements AlgorFunc {
 
 	private Algorithm algorithm;
-	private SDN_CKN_MAIN ckn;
-	private TPGF_ConnectNeighbors connectNeighbors;
+	private SDN_CKN_MAIN sdn_Ckn;
 	
 	
-	public SDN_CKN_TPGF_ConnectNeighbors(Algorithm algorithm){
+	public SDN_BASED_CKN(Algorithm algorithm){
 		this.algorithm = algorithm;
-		ckn = new SDN_CKN_MAIN();
-		connectNeighbors = new TPGF_ConnectNeighbors();
+		sdn_Ckn = new SDN_CKN_MAIN();
 	}
 	
-	public SDN_CKN_TPGF_ConnectNeighbors(){
+	public SDN_BASED_CKN(){
 		this(null);
 	}
 	
@@ -48,11 +46,10 @@ public class SDN_CKN_TPGF_ConnectNeighbors implements AlgorFunc {
 	}
 	
 	public void entry(){
-		ckn.run();
-//		connectNeighbors.run();
+		sdn_Ckn.run();
 		final StringBuffer message = new StringBuffer();
 		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
-		message.append("k=" +ckn.getK() +", Number of active nodes is:"+ activeSensorNodes.length +", they are: "+Arrays.toString(activeSensorNodes));
+		message.append("k=" +sdn_Ckn.getK() +", Number of active nodes is:"+ activeSensorNodes.length +", they are: "+Arrays.toString(activeSensorNodes));
 		
 		
 		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable(){

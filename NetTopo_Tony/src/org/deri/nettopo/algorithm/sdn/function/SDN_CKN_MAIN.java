@@ -15,16 +15,17 @@ import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
 import org.deri.nettopo.algorithm.Algorithm;
 import org.deri.nettopo.app.NetTopoApp;
+import org.deri.nettopo.display.Painter;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
 import org.deri.nettopo.node.SinkNode;
-import org.deri.nettopo.node.VNode;
 import org.deri.nettopo.node.sdn.NeighborTable;
 import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.node.sdn.SensorNode_SDN;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
+import org.eclipse.swt.graphics.RGB;
 
 /*
  * 
@@ -48,6 +49,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
+	private Painter painter;
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -59,7 +61,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		k = 1;
 		needInitialization = true;
 		routingPath = new HashMap<Integer, List<Integer>>();
-		available = new HashMap<Integer,Boolean>();
+		available = new HashMap<Integer, Boolean>();
+		wsn = NetTopoApp.getApp().getNetwork();
 	}
 
 	public SDN_CKN_MAIN() {
@@ -304,8 +307,10 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 	private void CKN_Function() {
 		initialWork();
-		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));
-		int controllerId = wsn.getSinkNodeId()[0];//这里只有一个controller
+		painter = NetTopoApp.getApp().getPainter();
+		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
+				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));
+		int controllerID = wsn.getSinkNodeId()[0];// 这里只有一个controller
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
 			Integer currentID = iterator.next();
@@ -317,12 +322,18 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				int[] awakeNeighborsOf2HopsLessThanRanku = Util
 						.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(currentID));
 				if (atLeast_k_Neighbors(Nu, Cu) && qualifiedConnectedInCu(Cu, awakeNeighborsOf2HopsLessThanRanku)) {
-					setAwake(currentID, false);
 					initializeAvailable();
-					List<Integer> path = findOnePath(false, currentID, controllerId);
+					List<Integer> path = findOnePath(false, currentID, controllerID);
 					routingPath.put(currentID, path);
+					/* paint the path sorted in LinkedList path */
+					for (int i = 0; i < path.size() - 1; i++) {
+						int id1 = ((Integer) path.get(i)).intValue();
+						int id2 = ((Integer) path.get(i + 1)).intValue();
+						painter.paintConnection(id1, id2, new RGB(185, 149, 86));
+					}
 
-					// checkPacketHeader(currentID);
+					sendActionPacket(currentID, controllerID, path);
+
 
 				} else {
 					setAwake(currentID, true);
@@ -332,6 +343,56 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			// checkPacketHeader(currentID, header.get(currentID));
 		}
 		System.out.println("");
+	}
+
+	/**
+	 * @param currentID
+	 */
+	private void sendActionPacket(int destinationID, int currentID, List<Integer> path) {
+
+		PacketHeader packetHeader = new PacketHeader();
+		packetHeader.setSource(currentID);
+		packetHeader.setDestination(destinationID);
+		packetHeader.setType(0);
+		packetHeader.setFlag(0);
+		packetHeader.setState(0);
+		packetHeader.setBehavior(1);
+		header.put(currentID, packetHeader);
+		checkPacketHeaderAccordingToFlowTable(currentID, packetHeader, path);
+
+	}
+
+	/**
+	 * @param controllerId
+	 * @param currentID
+	 * @param packetHeader
+	 */
+	private void checkPacketHeaderAccordingToFlowTable(int currentID, PacketHeader packetHeader, List<Integer> path) {
+		if (packetHeader.getType() == 0) {
+			if (packetHeader.getBehavior() == 0) {
+				if (packetHeader.getFlag() == 0) {
+
+					setAwake(currentID, true);
+					// send a update message to controller
+				}
+			} else {
+				if (packetHeader.getDestination() == currentID) {
+					if (packetHeader.getState() == 0) {
+						setAwake(currentID, false);
+					} else {
+						setAwake(currentID, true);
+					}
+				} else {
+					Integer nextHopID = path.get(path.indexOf(currentID) + 1);
+					// painter.paintNode(nextHopID, new RGB(205, 149, 86));
+					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
+
+					painter.paintConnection(currentID, nextHopID);
+				}
+			}
+		} else {
+
+		}
 	}
 
 	/**
@@ -415,33 +476,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		}
 	}
 
-	/**
-	 * @param controllerId
-	 * @param currentID
-	 * @param packetHeader
-	 */
-	private void checkPacketHeader(int currentID) {
-		PacketHeader packetHeader = header.get(currentID);
-		if (packetHeader.getType() == 0) {
-			if (packetHeader.getBehavior() == 0) {
-				if (packetHeader.getFlag() == 0) {
-					setAwake(currentID, true);
-					// send a update message to controller
-				} else {
-
-				}
-			} else {
-				if (packetHeader.getDestination() == currentID) {
-					if (packetHeader.getState() == 0) {
-						setAwake(currentID, false);
-					} else {
-						setAwake(currentID, true);
-					}
-				}
-			}
-		}
-	}
-
 	public Algorithm getAlgorithm() {
 		return algorithm;
 	}
@@ -467,7 +501,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		return null;
 	}
 
-	public LinkedList<Integer> findOnePath(boolean needPainting, Integer currentId, Integer controllerId) {
+	public LinkedList<Integer> findOnePath(boolean needPainting, Integer currentID, Integer controllerId) {
 		wsn = NetTopoApp.getApp().getNetwork();
 		LinkedList<Integer> path = new LinkedList<Integer>();// ���ڴ洢·��
 		ArrayList<Integer> searched = new ArrayList<Integer>();// ���ڴ洢�Ѿ���ѯ���Ľڵ�
@@ -477,8 +511,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			NetTopoApp.getApp().setFileModified(false);
 		}
 		if (wsn != null) {
-			available.put(currentId, true);
-			if (canReachSink(currentId, controllerId, path, searched)) {
+			available.put(currentID, true);
+			if (canReachSink(currentID, controllerId, path, searched)) {
+
 				return path;
 
 			}
@@ -505,7 +540,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		if (inOneHop(currentId, controllerId)) {
 			path.add(controllerId);
 			path.add(currentId);
-			available.put(currentId, false); // the node cannot be used next time
+			available.put(currentId, false); // the node cannot be used next
+												// time
 			return true;
 		}
 
@@ -552,7 +588,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			if (canReachSink(neighborID, controllerId, path, searched)) {
 				// System.out.println(neighbor.getID() + " can get sink");
 				path.add(currentId);
-				available.put(currentId, false); // the node cannot be used next time
+				available.put(currentId, false); // the node cannot be used next
+													// time
 				return true;
 			}
 		}
@@ -560,7 +597,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 
 	public boolean inOneHop(Integer currentId, Integer controllerId) {
-		int nodeID =currentId;
+		int nodeID = currentId;
 		Coordinate c = wsn.getCoordianteByID(nodeID);
 		SensorNode_SDN node = (SensorNode_SDN) wsn.getNodeByID(currentId);
 		int tr = node.getMaxTR();
