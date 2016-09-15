@@ -19,115 +19,115 @@ public class TPGF_FindOnePath implements AlgorFunc {
 	private Painter painter;
 	private LinkedList<Integer> path;
 	private ArrayList<Integer> searched;
-	/*************************ÊÇ·ñÒÑ¾­¼ÆËã¹ýÁÚ¾Ó½Úµã*******************/
-	public boolean flag=false;
-	
+	/************************* ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¾Ó½Úµï¿½ *******************/
+	public boolean flag = false;
+
 	private SinkNode sink;
 	private Coordinate sinkPos;
 	private int sinkTR;
-	
+
 	private Algorithm algorithm;
-	
-	
-	public TPGF_FindOnePath(Algorithm algorithm){
+
+	public TPGF_FindOnePath(Algorithm algorithm) {
 		this.algorithm = algorithm;
 	}
 
-	public TPGF_FindOnePath(){
+	public TPGF_FindOnePath() {
 		this(null);
 	}
-	
-	public Algorithm getAlgorithm(){
+
+	public Algorithm getAlgorithm() {
 		return this.algorithm;
 	}
-	
-	public List<Integer> getPath(){
+
+	public List<Integer> getPath() {
 		return path;
 	}
-	
-	public int getHopNum(){
-		return (path.size() - 1); 
+
+	public int getHopNum() {
+		return (path.size() - 1);
 	}
-	
-	public void run(){
-		if(!Property.isTPGF)	//²»ÊÇslave²Å¼ÆËã
-		findOnePath(true);
+
+	public void run() {
+		if (!Property.isTPGF) // ï¿½ï¿½ï¿½ï¿½slaveï¿½Å¼ï¿½ï¿½ï¿½
+			findOnePath(true);
 		else
 			findOnePath(false);
 	}
-	
-	
-	
-	
-	public boolean findOnePath(boolean needPainting){
+
+	public boolean findOnePath(boolean needPainting) {
 		wsn = NetTopoApp.getApp().getNetwork();
 		painter = NetTopoApp.getApp().getPainter();
-		path = new LinkedList<Integer>();//ÓÃÓÚ´æ´¢Â·¾¶
-		searched = new ArrayList<Integer>();//ÓÃÓÚ´æ´¢ÒÑ¾­²éÑ¯¹ýµÄ½Úµã
+		path = new LinkedList<Integer>();// ï¿½ï¿½ï¿½Ú´æ´¢Â·ï¿½ï¿½
+		searched = new ArrayList<Integer>();// ï¿½ï¿½ï¿½Ú´æ´¢ï¿½Ñ¾ï¿½ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½Ä½Úµï¿½
 		boolean canFind = false;
-		
-		if(NetTopoApp.getApp().isFileModified()){
+
+		if (NetTopoApp.getApp().isFileModified()) {
 			wsn.resetAllNodesAvailable();
 			NetTopoApp.getApp().setFileModified(false);
 		}
-	
+
 		TPGF_ConnectNeighbors func_connectNeighbors = new TPGF_ConnectNeighbors();
-		/*****************************ÐÞ¸Ä*********************************/	
-//		if(!flag)
-//		{func_connectNeighbors.connectNeighbors(false);//Ã¿´Î¶¼»á¼ÆËãÒ»´ÎËùÓÐµãµÄÁÚ¾Ó½Úµã
-//		flag=true;
-//		}
-		/*****************************ÐÞ¸Ä*********************************/
-		
-		if(!TPGF_FindAllPaths.flag)
-		func_connectNeighbors.connectNeighbors(false);
-		
-		
-		
-		if(wsn!=null){
-			Collection<VNode> nodes_source = wsn.getNodes("org.deri.nettopo.node.tpgf.SourceNode_TPGF",true);
-			Collection<VNode> nodes_sink = wsn.getNodes("org.deri.nettopo.node.SinkNode",true);
-			if(nodes_sink.size()>0 && nodes_source.size()>0){
-				SourceNode_TPGF node_source = (SourceNode_TPGF)nodes_source.iterator().next(); // retrieve one source node£¬diyige
-				sink = (SinkNode)nodes_sink.iterator().next();
+		/***************************** ï¿½Þ¸ï¿½ *********************************/
+		// if(!flag)
+		// {func_connectNeighbors.connectNeighbors(false);//Ã¿ï¿½Î¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Ú¾Ó½Úµï¿½
+		// flag=true;
+		// }
+		/***************************** ï¿½Þ¸ï¿½ *********************************/
+
+		if (!TPGF_FindAllPaths.flag)
+			func_connectNeighbors.connectNeighbors(false);
+
+		if (wsn != null) {
+			Collection<VNode> nodes_source = wsn.getNodes("org.deri.nettopo.node.tpgf.SourceNode_TPGF", true);
+			Collection<VNode> nodes_sink = wsn.getNodes("org.deri.nettopo.node.SinkNode", true);
+			if (nodes_sink.size() > 0 && nodes_source.size() > 0) {
+				SourceNode_TPGF node_source = (SourceNode_TPGF) nodes_source.iterator().next(); // retrieve
+																								// one
+																								// source
+																								// nodeï¿½ï¿½diyige
+				sink = (SinkNode) nodes_sink.iterator().next();
 				sinkPos = wsn.getCoordianteByID(sink.getID());
 				sinkTR = sink.getMaxTR();
-				
+
 				node_source.setAvailable(true);
-				if(canReachSink(node_source)){					
+				if (canReachSink(node_source)) {
 					canFind = true;
-					
-					if(needPainting){
-						/* change the colour of the intermediate node on the path */
-						for(int i=1;i<path.size()-1;i++){
-							int id1 = ((Integer)path.get(i)).intValue();
-							painter.paintNode(id1, new RGB(205,149,86));
+
+					if (needPainting) {
+						/*
+						 * change the colour of the intermediate node on the
+						 * path
+						 */
+						for (int i = 1; i < path.size() - 1; i++) {
+							int id1 = ((Integer) path.get(i)).intValue();
+							painter.paintNode(id1, new RGB(205, 149, 86));
 						}
-						
+
 						/* paint the path sorted in LinkedList path */
-						for(int i=0;i<path.size()-1;i++){
-							int id1 = ((Integer)path.get(i)).intValue();
-							int id2 = ((Integer)path.get(i+1)).intValue();
-							painter.paintConnection(id1, id2, new RGB(185,149,86));
+						for (int i = 0; i < path.size() - 1; i++) {
+							int id1 = ((Integer) path.get(i)).intValue();
+							int id2 = ((Integer) path.get(i + 1)).intValue();
+							painter.paintConnection(id1, id2, new RGB(185, 149, 86));
 						}
-						
+
 						/* Add log info */
 						final StringBuffer message = new StringBuffer("Path: ");
-						for(int i=path.size()-1;i>=0;i--){
+						for (int i = path.size() - 1; i >= 0; i--) {
 							message.append(path.get(i));
 							message.append(" ");
 						}
 						message.append("\tHops: " + getHopNum());
-						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable(){
+						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 							public void run() {
 								NetTopoApp.getApp().addLog(message.toString());
 								NetTopoApp.getApp().refresh();
 							}
 						});
 					}
-				}else{
-					if(needPainting)
-						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable(){
+				} else {
+					if (needPainting)
+						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 							public void run() {
 								NetTopoApp.getApp().addLog("No more paths.");
 							}
@@ -137,87 +137,94 @@ public class TPGF_FindOnePath implements AlgorFunc {
 		}
 		return canFind;
 	}
-	
+
 	/**
 	 * 
 	 * @param node
 	 * @return
 	 */
-	public boolean canReachSink(SensorNode_TPGF node){
-		if(!node.isAvailable())
+	public boolean canReachSink(SensorNode_TPGF node) {
+		if (!node.isAvailable())
 			return false;
 		searched.add(Integer.valueOf(node.getID()));
-		
-		/* If the distance between the current node and sinknode is 
-		 * in both nodes' transmission radius, the node can reach the 
-		 * sink. Return immediately */
-		if(inOneHop(node)){
+
+		/*
+		 * If the distance between the current node and sinknode is in both
+		 * nodes' transmission radius, the node can reach the sink. Return
+		 * immediately
+		 */
+		if (inOneHop(node)) {
 			path.add(Integer.valueOf(sink.getID()));
 			path.add(Integer.valueOf(node.getID()));
 			node.setAvailable(false); // the node cannot be used next time
 			return true;
 		}
-		
-		/* If the current node is not one-hop from sink, it search it's
-		 * neighbor that is most near to sink and find out whether it can
-		 * reach the sink. If not, it searches its' neighbor that is second
-		 * most near to sink and go on, etc. The neighbors do not include 
-		 * any already searched node that is not in one hope  */
+
+		/*
+		 * If the current node is not one-hop from sink, it search it's neighbor
+		 * that is most near to sink and find out whether it can reach the sink.
+		 * If not, it searches its' neighbor that is second most near to sink
+		 * and go on, etc. The neighbors do not include any already searched
+		 * node that is not in one hope
+		 */
 		List<Integer> neighborsID = node.getNeighbors();
-				
+
 		/* First we remove all searched node id in the neighbor list */
-		for(int i=0;i<searched.size();i++){
+		for (int i = 0; i < searched.size(); i++) {
 			neighborsID.remove(searched.get(i));
 		}
-		
+
 		/* Then we sort the neighbor list into distance ascending order */
-		for(int i=neighborsID.size()-1;i>0;i--){
-			for(int j=0; j<i; j++){
-				int id1 = ((Integer)neighborsID.get(j)).intValue();
+		for (int i = neighborsID.size() - 1; i > 0; i--) {
+			for (int j = 0; j < i; j++) {
+				int id1 = ((Integer) neighborsID.get(j)).intValue();
 				Coordinate c1 = wsn.getCoordianteByID(id1);
 				double dis1 = c1.distance(sinkPos);
-				int id2 = ((Integer)neighborsID.get(j+1)).intValue();
+				int id2 = ((Integer) neighborsID.get(j + 1)).intValue();
 				Coordinate c2 = wsn.getCoordianteByID(id2);
 				double dis2 = c2.distance(sinkPos);
-				if(dis1>dis2){
+				if (dis1 > dis2) {
 					Integer swap = neighborsID.get(j);
-					neighborsID.set(j, neighborsID.get(j+1));
-					neighborsID.set(j+1, swap);
+					neighborsID.set(j, neighborsID.get(j + 1));
+					neighborsID.set(j + 1, swap);
 				}
 			}
 		}
-		
-		/* Then we search from the neighbor that is most near to sink to the neighbor
-		 * that is least near to sink */		
-		for(int i=0;i<neighborsID.size();i++){
-			int neighborID = ((Integer)neighborsID.get(i)).intValue();
-			SensorNode_TPGF neighbor = (SensorNode_TPGF)wsn.getNodeByID(neighborID);
-				if(canReachSink(neighbor)){
-					//System.out.println(neighbor.getID() + " can get sink");
-					path.add(Integer.valueOf(node.getID()));
-					node.setAvailable(false); // the node cannot be used next time
-					return true;
-				}
+
+		/*
+		 * Then we search from the neighbor that is most near to sink to the
+		 * neighbor that is least near to sink
+		 */
+		for (int i = 0; i < neighborsID.size(); i++) {
+			int neighborID = ((Integer) neighborsID.get(i)).intValue();
+			SensorNode_TPGF neighbor = (SensorNode_TPGF) wsn.getNodeByID(neighborID);
+			if (canReachSink(neighbor)) {
+				// System.out.println(neighbor.getID() + " can get sink");
+				path.add(Integer.valueOf(node.getID()));
+				node.setAvailable(false); // the node cannot be used next time
+				return true;
+			}
 		}
 		return false;
 	}
-	
-	public boolean inOneHop(SensorNode_TPGF node){
+
+	public boolean inOneHop(SensorNode_TPGF node) {
 		int nodeID = node.getID();
 		Coordinate c = wsn.getCoordianteByID(nodeID);
 		int tr = node.getMaxTR();
 		double distance = 0;
-		distance = (double)((c.x-sinkPos.x)*(c.x-sinkPos.x) + (c.y-sinkPos.y)*(c.y-sinkPos.y) + (c.z-sinkPos.z)*(c.z-sinkPos.z));
+		distance = (double) ((c.x - sinkPos.x) * (c.x - sinkPos.x) + (c.y - sinkPos.y) * (c.y - sinkPos.y)
+				+ (c.z - sinkPos.z) * (c.z - sinkPos.z));
 		distance = Math.sqrt(distance);
-		if(distance<=tr && distance<= sinkTR)
+		if (distance <= tr && distance <= sinkTR)
 			return true;
 		return false;
 	}
 
 	@Override
 	public String getResult() {
-		return path.toString()+"\n"+"hopNum:"+getHopNum();
+		return path.toString() + "\n" + "hopNum:" + getHopNum();
 		// TODO Auto-generated method stub
-		
+
 	}
 }

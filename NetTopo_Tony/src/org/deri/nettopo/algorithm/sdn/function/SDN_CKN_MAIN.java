@@ -23,7 +23,6 @@ import org.deri.nettopo.node.VNode;
 import org.deri.nettopo.node.sdn.NeighborTable;
 import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.node.sdn.SensorNode_SDN;
-import org.deri.nettopo.node.tpgf.SensorNode_TPGF;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
 
@@ -47,8 +46,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer, Integer[]> neighborsOf2Hops;
 
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
-	private TPGF_FindOnePath_SDN tpgf_FindOnePath;
-	private HashMap<Integer, List<Integer>> routingTable;
+	private HashMap<Integer, List<Integer>> routingPath;
+	private HashMap<Integer, Boolean> available;
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -59,8 +58,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		neighborsOf2Hops = new HashMap<Integer, Integer[]>();
 		k = 1;
 		needInitialization = true;
-		tpgf_FindOnePath = new TPGF_FindOnePath_SDN(algorithm);
-		routingTable = new HashMap<Integer, List<Integer>>();
+		routingPath = new HashMap<Integer, List<Integer>>();
+		available = new HashMap<Integer,Boolean>();
 	}
 
 	public SDN_CKN_MAIN() {
@@ -304,17 +303,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 
 	private void CKN_Function() {
-		ranks = getRankForAllNodes();
-		initializeNeighbors();
-		initialNeiborTable();
-		initializeHeader();
-		initializeNeighborsOf2Hops();
-		routingTable.clear();
-		int[] temp = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());
-
-		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(temp);
-		int[] sinkNodeId = wsn.getSinkNodeId();
-		int controllerId = sinkNodeId[0];
+		initialWork();
+		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));
+		int controllerId = wsn.getSinkNodeId()[0];//这里只有一个controller
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
 			Integer currentID = iterator.next();
@@ -327,9 +318,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 						.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(currentID));
 				if (atLeast_k_Neighbors(Nu, Cu) && qualifiedConnectedInCu(Cu, awakeNeighborsOf2HopsLessThanRanku)) {
 					setAwake(currentID, false);
-					tpgf_FindOnePath.findOnePath(false, currentID);
-					List<Integer> path = tpgf_FindOnePath.getPath();
-					routingTable.put(currentID, path);
+					initializeAvailable();
+					List<Integer> path = findOnePath(false, currentID, controllerId);
+					routingPath.put(currentID, path);
 
 					// checkPacketHeader(currentID);
 
@@ -341,6 +332,29 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			// checkPacketHeader(currentID, header.get(currentID));
 		}
 		System.out.println("");
+	}
+
+	/**
+	 * 
+	 */
+	private void initialWork() {
+		ranks = getRankForAllNodes();
+		initializeNeighbors();
+		initialNeiborTable();
+		initializeHeader();
+		initializeNeighborsOf2Hops();
+		initializeAvailable();
+		routingPath.clear();
+	}
+
+	/**
+	 * 
+	 */
+	private void initializeAvailable() {
+		int[] allSensorNodesID = wsn.getAllSensorNodesID();
+		for (int id : allSensorNodesID) {
+			available.put(id, true);
+		}
 	}
 
 	private Integer[] getAwakeNeighborsOf2HopsLessThanRanku(int id) {
@@ -450,8 +464,116 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 	@Override
 	public String getResult() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public LinkedList<Integer> findOnePath(boolean needPainting, Integer currentId, Integer controllerId) {
+		wsn = NetTopoApp.getApp().getNetwork();
+		LinkedList<Integer> path = new LinkedList<Integer>();// ���ڴ洢·��
+		ArrayList<Integer> searched = new ArrayList<Integer>();// ���ڴ洢�Ѿ���ѯ���Ľڵ�
+		if (NetTopoApp.getApp().isFileModified()) {
+			wsn.resetAllNodesAvailable();
+			initializeAvailable();
+			NetTopoApp.getApp().setFileModified(false);
+		}
+		if (wsn != null) {
+			available.put(currentId, true);
+			if (canReachSink(currentId, controllerId, path, searched)) {
+				return path;
+
+			}
+		}
+		return path;
+	}
+
+	/**
+	 * 
+	 * @param node
+	 * @return
+	 */
+	public boolean canReachSink(Integer currentId, Integer controllerId, LinkedList<Integer> path,
+			ArrayList<Integer> searched) {
+		if (!available.get(currentId))
+			return false;
+		searched.add(currentId);
+
+		/*
+		 * If the distance between the current node and sinknode is in both
+		 * nodes' transmission radius, the node can reach the sink. Return
+		 * immediately
+		 */
+		if (inOneHop(currentId, controllerId)) {
+			path.add(controllerId);
+			path.add(currentId);
+			available.put(currentId, false); // the node cannot be used next time
+			return true;
+		}
+
+		/*
+		 * If the current node is not one-hop from sink, it search it's neighbor
+		 * that is most near to sink and find out whether it can reach the sink.
+		 * If not, it searches its' neighbor that is second most near to sink
+		 * and go on, etc. The neighbors do not include any already searched
+		 * node that is not in one hope
+		 */
+		List<Integer> neighborsID = new LinkedList<Integer>();
+		Integer[] neighbor2 = getAwakeNeighbors(currentId);
+		for (int i = 0; i < neighbor2.length; i++) {
+			neighborsID.add(neighbor2[i]);
+		}
+		/* First we remove all searched node id in the neighbor list */
+		for (int i = 0; i < searched.size(); i++) {
+			neighborsID.remove(searched.get(i));
+		}
+
+		/* Then we sort the neighbor list into distance ascending order */
+		for (int i = neighborsID.size() - 1; i > 0; i--) {
+			for (int j = 0; j < i; j++) {
+				int id1 = ((Integer) neighborsID.get(j)).intValue();
+				Coordinate c1 = wsn.getCoordianteByID(id1);
+				double dis1 = c1.distance(wsn.getCoordianteByID(controllerId));
+				int id2 = ((Integer) neighborsID.get(j + 1)).intValue();
+				Coordinate c2 = wsn.getCoordianteByID(id2);
+				double dis2 = c2.distance(wsn.getCoordianteByID(controllerId));
+				if (dis1 > dis2) {
+					Integer swap = neighborsID.get(j);
+					neighborsID.set(j, neighborsID.get(j + 1));
+					neighborsID.set(j + 1, swap);
+				}
+			}
+		}
+
+		/*
+		 * Then we search from the neighbor that is most near to sink to the
+		 * neighbor that is least near to sink
+		 */
+		for (int i = 0; i < neighborsID.size(); i++) {
+			int neighborID = neighborsID.get(0);
+			if (canReachSink(neighborID, controllerId, path, searched)) {
+				// System.out.println(neighbor.getID() + " can get sink");
+				path.add(currentId);
+				available.put(currentId, false); // the node cannot be used next time
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean inOneHop(Integer currentId, Integer controllerId) {
+		int nodeID =currentId;
+		Coordinate c = wsn.getCoordianteByID(nodeID);
+		SensorNode_SDN node = (SensorNode_SDN) wsn.getNodeByID(currentId);
+		int tr = node.getMaxTR();
+		double distance = 0;
+		distance = (double) ((c.x - wsn.getCoordianteByID(controllerId).x)
+				* (c.x - wsn.getCoordianteByID(controllerId).x)
+				+ (c.y - wsn.getCoordianteByID(controllerId).y) * (c.y - wsn.getCoordianteByID(controllerId).y)
+				+ (c.z - wsn.getCoordianteByID(controllerId).z) * (c.z - wsn.getCoordianteByID(controllerId).z));
+		distance = Math.sqrt(distance);
+		SinkNode sinknode = (SinkNode) wsn.getNodeByID(controllerId);
+		if (distance <= tr && distance <= sinknode.getMaxTR())
+			return true;
+		return false;
 	}
 
 }
