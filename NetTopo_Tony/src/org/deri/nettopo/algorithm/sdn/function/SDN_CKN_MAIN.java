@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Vector;
 
@@ -17,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
 import org.deri.nettopo.algorithm.Algorithm;
 import org.deri.nettopo.app.NetTopoApp;
-import org.deri.nettopo.display.Painter;
 import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.NodeConfiguration;
 import org.deri.nettopo.node.SensorNode;
@@ -51,6 +48,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
+	private int controllerID;
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -63,7 +61,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		needInitialization = true;
 		routingPath = new HashMap<Integer, List<Integer>>();
 		available = new HashMap<Integer, Boolean>();
-		wsn = NetTopoApp.getApp().getNetwork();
 	}
 
 	public SDN_CKN_MAIN() {
@@ -74,10 +71,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		if (isNeedInitialization()) {
 			initializeWork();
 		}
+		resetAllNodesAwakeColor();
 		CKN_Function();
-		resetColorAfterCKN();
+//		resetColorAfterCKN();
 		app.getPainter().rePaintAllNodes();
-		paintConnections();
+		// paintConnections();
 		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				app.refresh();
@@ -89,23 +87,14 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	/**
 	 * 
 	 */
-	private void paintConnections() {
-		Iterator<Entry<Integer, List<Integer>>> iterator = routingPath.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Entry<Integer, List<Integer>> next = iterator.next();
-			Integer key = next.getKey();
-			List<Integer> value = next.getValue();
-			Object[] array = value.toArray();
-			for (int i = 0; i < array.length - 1; i++) {
-				int parseInt = Integer.parseInt(array[i].toString());
-				int parseInt2 = Integer.parseInt(array[i + 1].toString());
-				if (i != 0) {
-					app.getPainter().paintNode(parseInt, new RGB(205, 149, 86));
-				}
-				app.getPainter().paintConnection(parseInt, parseInt2, new RGB(205, 149, 86));
-			}
+	private void resetAllNodesAwakeColor() {
+		int[] ids = wsn.getAllSensorNodesID();
+		for (int id : ids) {
+			wsn.resetNodeColorByID(id, NodeConfiguration.AwakeNodeColorRGB);
 		}
 	}
+
+	
 
 	public void runForStatistics() {
 		if (isNeedInitialization()) {
@@ -137,6 +126,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		for (int i = 0; i < ids.length; i++) {
 			setAwake(ids[i], true);
 		}
+		
 	}
 
 	private void setAwake(int id, boolean isAwake) {
@@ -332,7 +322,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		// painter = NetTopoApp.getApp().getPainter();
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
 				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
-		int controllerID = wsn.getSinkNodeId()[0];// 这里只有一个controller
+		controllerID = wsn.getSinkNodeId()[0];
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
 			Integer currentID = iterator.next();
@@ -347,9 +337,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 					initializeAvailable();
 					List<Integer> path = findOnePath(false, currentID, controllerID);
 					routingPath.put(currentID, path);
-
 					sendActionPacket(currentID, controllerID, path);
-
 				} else {
 					setAwake(currentID, true);
 				}
@@ -357,7 +345,17 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 			// checkPacketHeader(currentID, header.get(currentID));
 		}
-		System.out.println("");
+		final StringBuffer message = new StringBuffer();
+		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
+		message.append("k=" +k +", Number of active nodes is:"+ activeSensorNodes.length +", they are: "+Arrays.toString(activeSensorNodes));
+		
+		
+		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable(){
+			public void run() {
+				NetTopoApp.getApp().refresh();
+				NetTopoApp.getApp().addLog(message.toString());
+			}
+		});
 	}
 
 	/**
@@ -382,7 +380,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	 * @param currentID
 	 * @param packetHeader
 	 */
-	private void checkPacketHeaderAccordingToFlowTable(int currentID, PacketHeader packetHeader, List<Integer> path) {
+	private void checkPacketHeaderAccordingToFlowTable(final int currentID, final PacketHeader packetHeader,
+			List<Integer> path) {
 		if (packetHeader.getType() == 0) {
 			if (packetHeader.getBehavior() == 0) {
 				if (packetHeader.getFlag() == 0) {
@@ -394,13 +393,31 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				if (packetHeader.getDestination() == currentID) {
 					if (packetHeader.getState() == 0) {
 						setAwake(currentID, false);
+						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+							public void run() {
+								NetTopoApp.getApp().getPainter().paintNode(currentID,
+										NodeConfiguration.SleepNodeColorRGB);
+								NetTopoApp.getApp().refresh();
+
+							}
+						});
 					} else {
 						setAwake(currentID, true);
 					}
 				} else {
-					Integer nextHopID = path.get(path.indexOf(currentID) + 1);
+					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
 					// painter.paintNode(nextHopID, new RGB(205, 149, 86));
-					NetTopoApp.getApp().getPainter().paintConnection(currentID, nextHopID);
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							NetTopoApp.getApp().getPainter().paintConnection(currentID, nextHopID,
+									new RGB(185, 149, 86));
+							if (nextHopID != packetHeader.getDestination()) {
+								NetTopoApp.getApp().getPainter().paintNode(nextHopID, new RGB(185, 149, 86));
+							}
+							NetTopoApp.getApp().refresh();
+
+						}
+					});
 					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
 
 				}
