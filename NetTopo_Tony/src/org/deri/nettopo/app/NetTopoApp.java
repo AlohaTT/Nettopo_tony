@@ -155,7 +155,7 @@ public class NetTopoApp {
 	/**
 	 * main shell in the app
 	 */
-	private Shell sh_main = null;// shell ÐÞ¸Ä³Éstatic
+	private Shell sh_main = null;// shell ï¿½Þ¸Ä³ï¿½static
 
 	private Menu mb_main = null;
 
@@ -634,7 +634,7 @@ public class NetTopoApp {
 		mi_file_new = new MenuItem(submenu_file, SWT.CASCADE);
 		mi_file_new.setText("&New");
 
-		/*********************** ¼àÌýÎÄ¼þ´ò¿ª *******************/
+		/*********************** ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ *******************/
 		mi_file_open = new MenuItem(submenu_file, SWT.PUSH);
 		mi_file_open.setText("&Open File");
 		mi_file_open.addSelectionListener(new SelectionAdapter() {
@@ -643,7 +643,7 @@ public class NetTopoApp {
 			}
 		});
 
-		/*********************** ¼àÌý"¹Ø±Õ" *******************/
+		/*********************** ï¿½ï¿½ï¿½ï¿½"ï¿½Ø±ï¿½" *******************/
 		mi_file_close = new MenuItem(submenu_file, SWT.PUSH);
 		mi_file_close.setText("&Close");
 		mi_file_close.setEnabled(false);
@@ -655,7 +655,7 @@ public class NetTopoApp {
 
 		new MenuItem(submenu_file, SWT.SEPARATOR);
 
-		/*********************** ÎÄ¼þ×ÓÄ¿Â¼£º±£´æ *******************/
+		/*********************** ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ *******************/
 		mi_file_save = new MenuItem(submenu_file, SWT.PUSH);
 		mi_file_save.setText("&Save");
 		mi_file_save.setEnabled(false);
@@ -665,7 +665,7 @@ public class NetTopoApp {
 			}
 		});
 
-		/*********************** ÎÄ¼þ×ÓÄ¿Â¼£º±£´æ *******************/
+		/*********************** ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ *******************/
 		mi_file_saveAs = new MenuItem(submenu_file, SWT.PUSH);
 		mi_file_saveAs.setText("Save &As");
 		mi_file_saveAs.setEnabled(false);
@@ -803,7 +803,7 @@ public class NetTopoApp {
 		});
 
 		/* Dynamically create the Algorithm submenu */
-		/* ½«ÐÂµÄËã·¨¼ÓÔÚÎÄ¼þalgorithm.propertiesÀïÃæ£¬¼´¿ÉÔÚ²Ëµ¥ÖÐ¿´µ½£¬ÒªÓÐÏàÓ¦µÄÀà */
+		/* ï¿½ï¿½ï¿½Âµï¿½ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½algorithm.propertiesï¿½ï¿½ï¿½æ£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ú²Ëµï¿½ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ */
 		submenu_algorithm = new Menu(mi_algorithm);
 		mi_algorithm.setMenu(submenu_algorithm);
 
@@ -817,7 +817,7 @@ public class NetTopoApp {
 			while ((property = br.readLine()) != null) {
 
 				if (property.trim().startsWith("#")) {
-					continue;/* #ÊÇ×¢ÊÍ·û£¬½«Ëã·¨´Ó²Ëµ¥ÖÐ×¢ÊÍµô */
+					continue;/* #ï¿½ï¿½×¢ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½Ó²Ëµï¿½ï¿½ï¿½×¢ï¿½Íµï¿½ */
 				}
 				final String name;
 				String description;
@@ -848,7 +848,7 @@ public class NetTopoApp {
 
 				if (functions == null)
 					continue;
-				for (int i = 0; i < functions.length; i++) { // Ëã·¨·½·¨Ãû×Ö
+				for (int i = 0; i < functions.length; i++) { // ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 					final String funcName = functions[i].getClass().getName();
 					// final AlgorFunc function = (AlgorFunc) functions[i]
 					// .getClass().newInstance();
@@ -932,12 +932,12 @@ public class NetTopoApp {
 					addLog("It is running ,please wait.");
 
 					/**
-					 * Çå¿Õ ¡£/image/ Ä¿Â¼
+					 * ï¿½ï¿½ï¿½ ï¿½ï¿½/image/ Ä¿Â¼
 					 */
 					Util.deleteDir(new File("./image/"));
 					boolean isFinish = cmd_parallelRun();
 					if (!isFinish) {
-						addLog("Some thing is worng with slaves.   #101"); // 101ºÅ´íÎó
+						addLog("Some thing is worng with slaves.   #101"); // 101ï¿½Å´ï¿½ï¿½ï¿½
 						return;
 					}
 					cmd_createResultsMenuItem();
@@ -974,7 +974,7 @@ public class NetTopoApp {
 		// while ((property = br.readLine()) != null) {
 		//
 		// if (property.trim().startsWith("#")) {
-		// continue;/* #ÊÇ×¢ÊÍ·û£¬½«Ëã·¨´Ó²Ëµ¥ÖÐ×¢ÊÍµô */
+		// continue;/* #ï¿½ï¿½×¢ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½Ó²Ëµï¿½ï¿½ï¿½×¢ï¿½Íµï¿½ */
 		// }
 		// final String name;
 		// String description;
@@ -1005,7 +1005,7 @@ public class NetTopoApp {
 		//
 		// if (functions == null)
 		// continue;
-		// for (int i = 0; i < functions.length; i++) { // Ëã·¨·½·¨Ãû×Ö
+		// for (int i = 0; i < functions.length; i++) { // ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		// final String funcName = functions[i].getClass().getName();
 		// // final AlgorFunc function = (AlgorFunc) functions[i]
 		// // .getClass().newInstance();
@@ -1025,7 +1025,7 @@ public class NetTopoApp {
 		// mi_algorFunc.addSelectionListener(new SelectionAdapter() {
 		// public void widgetSelected(SelectionEvent e) {
 		// MainApp.master.setTopoTypeAndFunction(name + ":"
-		// + funcName);// ¼ÇÂ¼ÏÂ±»µ÷ÓÃµÄ·½·¨
+		// + funcName);// ï¿½ï¿½Â¼ï¿½Â±ï¿½ï¿½ï¿½ï¿½ÃµÄ·ï¿½ï¿½ï¿½
 		// System.out.println("name:" + name + ":" + funcName);
 		// Property.isTPGF = true;
 		// function.run();
@@ -1595,7 +1595,7 @@ public class NetTopoApp {
 
 							refresh();
 							if (nodeFocused) {
-								restoreImage(); // ±£´æµ±Ç°×´Ì¬µÄimage
+								restoreImage(); // ï¿½ï¿½ï¿½æµ±Ç°×´Ì¬ï¿½ï¿½image
 								nodeFocused = false;
 								currentSelectedNode = null;
 								refresh();
@@ -1607,7 +1607,7 @@ public class NetTopoApp {
 							currentSelectedGas = null;
 							refresh();
 						}
-						if (moveNode == null) { // ²»ÊÇmovenode¶øÊÇÓÐ¿ÉÄÜÊÇ gas
+						if (moveNode == null) { // ï¿½ï¿½ï¿½ï¿½movenodeï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½ gas
 							int gid_minDis = -1;
 							java.util.Iterator<VGas> g_it = wsn.getAllGas()
 									.iterator();
@@ -1639,7 +1639,7 @@ public class NetTopoApp {
 								}
 							}
 
-							if (moveGas != null) // µãÖÐ¶¾Æø½Úµã
+							if (moveGas != null) // ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Úµï¿½
 							{
 								if (minDis <= Integer.parseInt(moveGas
 										.getAttrValue("Radius"))) {
@@ -1737,7 +1737,7 @@ public class NetTopoApp {
 						refresh();
 						lastLeftPoint.x = event.x;
 						lastLeftPoint.y = event.y;
-					} else if (pointInGas) { // µãÔÚ¶¾Æø½ÚµãÖÐ
+					} else if (pointInGas) { // ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½
 						int offset_x = event.x - lastLeftPoint.x;
 
 						int offset_y = event.y - lastLeftPoint.y;
@@ -1824,7 +1824,7 @@ public class NetTopoApp {
 					}
 					break;
 				case SWT.MouseUp:
-					if (event.button == 1) { // ×ó¼ü
+					if (event.button == 1) { // ï¿½ï¿½ï¿½
 						if (pointInNode) {
 							Coordinate coordinate = wsn
 									.getCoordianteByID(moveNode.getID());
@@ -1839,7 +1839,7 @@ public class NetTopoApp {
 
 								// by dennis
 								// painter.rePaintAllGas();
-								currentSelectedNode = moveNode;// Õâ¸ö¹¦ÄÜÎÒ¿´ÏÂ£¬Èç¹û²î²»¶àÁË¾ÍÕâÑùÏÈ¡£ÀÏÊ¦ÃÇÊÇÏëÒªÏÈ³öÐ§¹û
+								currentSelectedNode = moveNode;// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¿ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½î²»ï¿½ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½È³ï¿½Ð§ï¿½ï¿½
 								System.out.println("I have set it null");
 
 								refresh();
@@ -1925,7 +1925,7 @@ public class NetTopoApp {
 				.getResourceAsStream("logo.jpg")));
 		sh_main.setBounds(new Rectangle(0, 0, 1000, 900));
 		sh_main.setLayout(new GridLayout());
-		sh_main.setLocation(500, 100);// ÉèÖÃÎ»ÖÃ
+		sh_main.setLocation(500, 100);// ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 		sh_main.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellClosed(ShellEvent e) {
@@ -1938,8 +1938,13 @@ public class NetTopoApp {
 		createCmp_main();
 		sh_main.open();
 		while (!sh_main.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+			try {
+				if (!display.readAndDispatch())
+					display.sleep();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 		disposeImg();
 		cancelThreads();
@@ -2429,7 +2434,7 @@ public class NetTopoApp {
 		}
 	}
 
-	private void paintNetwork(int index, String pictureName) throws Exception // ÖØÐÂ»­Í¼£¬´ÓslaveµÃµ½µÄ½á¹ûÖÐ»­Í¼
+	private void paintNetwork(int index, String pictureName) throws Exception // ï¿½ï¿½ï¿½Â»ï¿½Í¼ï¿½ï¿½ï¿½ï¿½slaveï¿½Ãµï¿½ï¿½Ä½ï¿½ï¿½ï¿½Ð»ï¿½Í¼
 	{
 		WirelessSensorNetwork wsnNow = allTasks.get(index);
 		setNetwork(wsnNow);
@@ -2456,7 +2461,7 @@ public class NetTopoApp {
 		refresh();
 	}
 
-	private boolean cmd_parallelRun() throws Exception {// ²¢ÐÐ
+	private boolean cmd_parallelRun() throws Exception {// ï¿½ï¿½ï¿½ï¿½
 		ReadXML.FILEPATH = CreateTasks.simPath;
 		if (allTasks == null || allTasks.size() == 0 || ReadXML.isModified()) {
 			allTasks = ReadXML.getAllTasksList();
@@ -2646,23 +2651,23 @@ public class NetTopoApp {
 	 * open dir
 	 */
 	private boolean chooseDir() {
-		// ÐÂ½¨ÎÄ¼þ¼Ð£¨Ä¿Â¼£©¶Ô»°¿ò
+		// ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½Ð£ï¿½Ä¿Â¼ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
 		DirectoryDialog folderdlg = new DirectoryDialog(sh_main);
-		// ÉèÖÃÎÄ¼þ¶Ô»°¿òµÄ±êÌâ
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
 		folderdlg.setText("DIR selection");
-		// ÉèÖÃ³õÊ¼Â·¾¶
+		// ï¿½ï¿½ï¿½Ã³ï¿½Ê¼Â·ï¿½ï¿½
 		folderdlg.setFilterPath("SystemDrive");
-		// ÉèÖÃ¶Ô»°¿òÌáÊ¾ÎÄ±¾ÐÅÏ¢
+		// ï¿½ï¿½ï¿½Ã¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ä±ï¿½ï¿½ï¿½Ï¢
 		folderdlg
 				.setMessage("Please choose the DIR contains tasks or where you want to hold new tasks.");
-		// ´ò¿ªÎÄ¼þ¶Ô»°¿ò£¬·µ»ØÑ¡ÖÐÎÄ¼þ¼ÐÄ¿Â¼
+		// ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ô»ï¿½ï¿½ò£¬·ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼
 		String selecteddir = folderdlg.open();
 		if (selecteddir == null) {
 			return false;
 		} else {
 			simulationPath = selecteddir;
 			return true;
-			// System.out.println("ÄúÑ¡ÖÐµÄÎÄ¼þ¼ÐÄ¿Â¼Îª£º"+selecteddir);
+			// System.out.println("ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼Îªï¿½ï¿½"+selecteddir);
 		}
 	}
 
