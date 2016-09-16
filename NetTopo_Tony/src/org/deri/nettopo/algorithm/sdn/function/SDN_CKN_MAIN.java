@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Vector;
 
@@ -49,7 +51,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
-	private Painter painter;
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -75,14 +76,35 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		}
 		CKN_Function();
 		resetColorAfterCKN();
-
 		app.getPainter().rePaintAllNodes();
+		paintConnections();
 		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				app.refresh();
 			}
 		});
 
+	}
+
+	/**
+	 * 
+	 */
+	private void paintConnections() {
+		Iterator<Entry<Integer, List<Integer>>> iterator = routingPath.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<Integer, List<Integer>> next = iterator.next();
+			Integer key = next.getKey();
+			List<Integer> value = next.getValue();
+			Object[] array = value.toArray();
+			for (int i = 0; i < array.length - 1; i++) {
+				int parseInt = Integer.parseInt(array[i].toString());
+				int parseInt2 = Integer.parseInt(array[i + 1].toString());
+				if (i != 0) {
+					app.getPainter().paintNode(parseInt, new RGB(205, 149, 86));
+				}
+				app.getPainter().paintConnection(parseInt, parseInt2, new RGB(205, 149, 86));
+			}
+		}
 	}
 
 	public void runForStatistics() {
@@ -307,9 +329,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 	private void CKN_Function() {
 		initialWork();
-		painter = NetTopoApp.getApp().getPainter();
+		// painter = NetTopoApp.getApp().getPainter();
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
-				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));
+				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
 		int controllerID = wsn.getSinkNodeId()[0];// 这里只有一个controller
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
@@ -325,15 +347,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 					initializeAvailable();
 					List<Integer> path = findOnePath(false, currentID, controllerID);
 					routingPath.put(currentID, path);
-					/* paint the path sorted in LinkedList path */
-					for (int i = 0; i < path.size() - 1; i++) {
-						int id1 = ((Integer) path.get(i)).intValue();
-						int id2 = ((Integer) path.get(i + 1)).intValue();
-						painter.paintConnection(id1, id2, new RGB(185, 149, 86));
-					}
 
 					sendActionPacket(currentID, controllerID, path);
-
 
 				} else {
 					setAwake(currentID, true);
@@ -385,9 +400,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				} else {
 					Integer nextHopID = path.get(path.indexOf(currentID) + 1);
 					// painter.paintNode(nextHopID, new RGB(205, 149, 86));
+					NetTopoApp.getApp().getPainter().paintConnection(currentID, nextHopID);
 					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
 
-					painter.paintConnection(currentID, nextHopID);
 				}
 			}
 		} else {
@@ -513,9 +528,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		if (wsn != null) {
 			available.put(currentID, true);
 			if (canReachSink(currentID, controllerId, path, searched)) {
-
 				return path;
-
 			}
 		}
 		return path;
