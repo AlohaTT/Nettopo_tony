@@ -24,7 +24,6 @@ import org.deri.nettopo.node.sdn.PacketHeader;
 import org.deri.nettopo.node.sdn.SensorNode_SDN;
 import org.deri.nettopo.util.Coordinate;
 import org.deri.nettopo.util.Util;
-import org.eclipse.swt.graphics.RGB;
 
 /*
  * 
@@ -317,7 +316,6 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 	private void CKN_Function() {
 		initialWork();
-		// painter = NetTopoApp.getApp().getPainter();
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
 				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
 		controllerID = wsn.getSinkNodeId()[0];
@@ -352,8 +350,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				NetTopoApp.getApp().addLog(message.toString());
-//				resetColorAfterCKN();
-//				app.cmd_repaintNetwork();
+				resetColorAfterCKN();
+				app.cmd_repaintNetwork();
 				NetTopoApp.getApp().refresh();
 			}
 		});
@@ -397,7 +395,13 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 						setAwake(currentID, false);
 						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 							public void run() {
+								
 								NetTopoApp.getApp().refresh();
+								try {
+									Thread.sleep(500);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
 								NetTopoApp.getApp().getPainter().paintNode(currentID,
 										NodeConfiguration.SleepNodeColorRGB);
 								app.refresh();
@@ -411,15 +415,19 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 						public void run() {
 							NetTopoApp.getApp().refresh();
+							if (currentID!=controllerID) {
+								
+								NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.AwakeNodeColorRGB);
+							}
 							NetTopoApp.getApp().getPainter().paintConnection(currentID, nextHopID,
 									NodeConfiguration.lineConnectPathColor);
+							
 							if (nextHopID != packetHeader.getDestination()) {
-								NetTopoApp.getApp().getPainter().paintNode(nextHopID, NodeConfiguration.lineConnectPathColor);
+								NetTopoApp.getApp().getPainter().paintNode(nextHopID, NodeConfiguration.NodeInPathColor);
 							}
 							try {
-								Thread.sleep(300);
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 
