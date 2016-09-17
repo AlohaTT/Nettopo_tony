@@ -30,7 +30,7 @@ import org.deri.nettopo.util.Util;
  * 
  * 
  */
-public class SDN_CKN_MAIN implements AlgorFunc {
+public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 
 	private Algorithm algorithm;
 	private WirelessSensorNetwork wsn;
@@ -44,17 +44,15 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer, NeighborTable> neighborTable;
 	private HashMap<Integer, Integer[]> neighborsOf2Hops;
 
-	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN.class);
+	private static Logger logger = Logger.getLogger(SDN_CKN_MAIN2_MutilThread.class);
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
 	private int controllerID;
-	final private static boolean NEEDPAINTING=true;//是否需要绘制路线
-	protected static final boolean NEEDINTERVAL = true;//绘制路线时是否需要时间间隔
-	protected static final long INTERVALTIME=0;//绘制路线时的时间间隔
-	protected static final boolean RETAINPATH=false;//绘制路线时的时间间隔
-	
+	final private static boolean NEEDPAINTING = true;// 是否需要绘制路线
+	protected static final boolean NEEDINTERVAL = true;// 绘制路线时是否需要时间间隔
+	protected static final long INTERVALTIME = 0;// 绘制路线时的时间间隔
 
-	public SDN_CKN_MAIN(Algorithm algorithm) {
+	public SDN_CKN_MAIN2_MutilThread(Algorithm algorithm) {
 		this.algorithm = algorithm;
 		neighbors = new HashMap<Integer, Integer[]>();
 		awake = new HashMap<Integer, Boolean>();
@@ -67,7 +65,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		available = new HashMap<Integer, Boolean>();
 	}
 
-	public SDN_CKN_MAIN() {
+	public SDN_CKN_MAIN2_MutilThread() {
 		this(null);
 	}
 
@@ -79,6 +77,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		CKN_Function();
 		// resetColorAfterCKN();
 		app.getPainter().rePaintAllNodes();
+		// paintConnections();
 		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				app.refresh();
@@ -323,42 +322,51 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
 				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
 		controllerID = wsn.getSinkNodeId()[0];
-		
+
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
-			Integer currentID = iterator.next();
+			final Integer currentID = iterator.next();
+
 			Integer[] Nu = getAwakeNeighbors(currentID);
 			if (Nu.length < k || isOneOfAwakeNeighborsNumLessThanK(currentID)) {
-				this.setAwake(currentID, true);
+				setAwake(currentID, true);
 			} else {
 				Integer[] Cu = getCu(currentID);
 				int[] awakeNeighborsOf2HopsLessThanRanku = Util
 						.IntegerArray2IntArray(getAwakeNeighborsOf2HopsLessThanRanku(currentID));
 				if (atLeast_k_Neighbors(Nu, Cu) && qualifiedConnectedInCu(Cu, awakeNeighborsOf2HopsLessThanRanku)) {
 					initializeAvailable();
-					List<Integer> path = findOnePath(false, currentID, controllerID);
+					final List<Integer> path = findOnePath(false, currentID, controllerID);
 					routingPath.put(currentID, path);
-					sendActionPacket(currentID, controllerID, path);
+					new Thread(new Runnable() {
+						public void run() {
+							sendActionPacket(currentID, controllerID, path);
+							try {
+								Thread.sleep(1);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}).start();;
 				} else {
 					setAwake(currentID, true);
 				}
 			}
-
+			
 		}
-		
+
 		final StringBuffer message = new StringBuffer();
-		int[] activeSensorNodes = app.getNetwork().getSensorActiveNodes();
+		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
 		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
 				+ Arrays.toString(activeSensorNodes));
 
-		app.getDisplay().asyncExec(new Runnable() {
+		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 			public void run() {
-				app.addLog(message.toString());
-				if (RETAINPATH) {
-					resetColorAfterCKN();
-					app.cmd_repaintNetwork();
-				}
-				app.refresh();
+				NetTopoApp.getApp().refresh();
+				NetTopoApp.getApp().addLog(message.toString());
+//				resetColorAfterCKN();
+//				app.cmd_repaintNetwork();
 			}
 		});
 		System.out.println();
@@ -388,30 +396,32 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	 */
 	private void checkPacketHeaderAccordingToFlowTable(final int currentID, final PacketHeader packetHeader,
 			List<Integer> path) {
+		
 		if (NEEDPAINTING) {
 			if (currentID != controllerID) {
 				final Integer preHopID = path.get(path.indexOf(currentID) - 1);
 				if (preHopID == controllerID) {
-					app.getDisplay().asyncExec(new Runnable() {
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 						public void run() {
-							app.getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
+							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
 						}
 					});
 				} else {
-					app.getDisplay().asyncExec(new Runnable() {
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 						public void run() {
-							app.getPainter().paintNode(preHopID, NodeConfiguration.AwakeNodeColorRGB);
+							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.AwakeNodeColorRGB);
 						}
 					});
 				}
-				app.getDisplay().asyncExec(new Runnable() {
+				NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 					public void run() {
-						app.getPainter().paintConnection(preHopID, currentID,
+						NetTopoApp.getApp().getPainter().paintConnection(preHopID, currentID,
 								NodeConfiguration.lineConnectPathColor);
 					}
 				});
+				
 			}
-			app.getDisplay().asyncExec(new Runnable() {
+			NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 				public void run() {
 					if (NEEDINTERVAL) {
 						try {
@@ -419,12 +429,18 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-						} 
+						}
 					}
-					app.refresh();
-					app.getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
+					NetTopoApp.getApp().refresh();
+					NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
 				}
 			});
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		if (packetHeader.getType() == 0) {
 			if (packetHeader.getBehavior() == 0) {
@@ -438,17 +454,17 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 					if (packetHeader.getState() == 0) {
 						setAwake(currentID, false);
 						if (NEEDPAINTING) {
-							app.getDisplay().asyncExec(new Runnable() {
+							NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 								public void run() {
-									app.refresh();
+									NetTopoApp.getApp().refresh();
 									if (NEEDINTERVAL) {
 										try {
 											Thread.sleep(INTERVALTIME);
 										} catch (InterruptedException e) {
 											e.printStackTrace();
-										} 
+										}
 									}
-									app.getPainter().paintNode(currentID,
+									NetTopoApp.getApp().getPainter().paintNode(currentID,
 											NodeConfiguration.SleepNodeColorRGB);
 								}
 							});
@@ -458,7 +474,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 					}
 				} else {
 					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
-					
+				
 					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
 
 				}
@@ -475,7 +491,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		ranks = getRankForAllNodes();
 		initializeNeighbors();
 		initialNeiborTable();
-//		initializeHeader();
+		initializeHeader();
 		initializeNeighborsOf2Hops();
 		initializeAvailable();
 		routingPath.clear();
@@ -575,13 +591,13 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 
 	public LinkedList<Integer> findOnePath(boolean needPainting, Integer currentID, Integer controllerId) {
-		wsn = app.getNetwork();
+		wsn = NetTopoApp.getApp().getNetwork();
 		LinkedList<Integer> path = new LinkedList<Integer>();// ���ڴ洢·��
 		ArrayList<Integer> searched = new ArrayList<Integer>();// ���ڴ洢�Ѿ���ѯ���Ľڵ�
-		if (app.isFileModified()) {
+		if (NetTopoApp.getApp().isFileModified()) {
 			wsn.resetAllNodesAvailable();
 			initializeAvailable();
-			app.setFileModified(false);
+			NetTopoApp.getApp().setFileModified(false);
 		}
 		if (wsn != null) {
 			available.put(currentID, true);

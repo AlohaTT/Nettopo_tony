@@ -10,6 +10,7 @@ import org.deri.nettopo.algorithm.tpgf.function.TPGF_ConnectNeighbors;
 import org.deri.nettopo.app.NetTopoApp;
 import org.deri.nettopo.display.Painter;
 import org.deri.nettopo.network.WirelessSensorNetwork;
+import org.deri.nettopo.util.Property;
 import org.eclipse.swt.internal.cocoa.id;
 
 public class SDN_BASED_CKN implements AlgorFunc {
@@ -27,6 +28,55 @@ public class SDN_BASED_CKN implements AlgorFunc {
 	}
 
 	public void run() {
+		NetTopoApp app = NetTopoApp.getApp();
+		Timer timer = app.getTimer_func();
+		TimerTask task = app.getTimertask_func();
+		if(timer != null && task != null){
+			task.cancel();
+			timer.cancel();
+			timer.purge();
+			app.setTimertask_func(null);
+			app.setTime_func(null);
+		}
+		int times=Property.times;//����times
+		System.out.println("   Property.times"+Property.times);
+		app.setTime_func(new Timer());
+		app.setTimertask_func(new TimerTask(){
+			public void run() {
+				//entry();
+				/******************add**********************/
+				//System.out.println("Property.isTPGF"+Property.isTPGF+"   Property.times"+Property.times);
+				if(Property.isTPGF)
+				{
+					if (Property.times != 0) {
+						entry();
+						Property.times--;
+					} else {	//���
+						NetTopoApp app = NetTopoApp.getApp();
+						Timer timer = app.getTimer_func();
+						TimerTask task = app.getTimertask_func();
+						if(timer != null && task != null){
+							task.cancel();
+							timer.cancel();
+							timer.purge();
+							app.setTimertask_func(null);
+							app.setTime_func(null);
+						}//���
+					}
+				}
+				else
+				{
+					entry();
+				}
+			}
+		});
+		app.getTimer_func().schedule(app.getTimertask_func(), 0, app.getFunc_INTERVAL() * 10000);
+		if(Property.isTPGF)
+		{
+			while(app.getTimer_func()!=null);
+			System.out.println("pause");
+			Property.times=times;//��ԭ
+		}
 			sdn_Ckn.run();
 	}
 
