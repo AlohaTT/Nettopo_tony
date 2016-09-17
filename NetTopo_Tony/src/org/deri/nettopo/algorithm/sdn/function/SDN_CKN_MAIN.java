@@ -48,6 +48,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
 	private int controllerID;
+	final private static boolean NEEDPAINTING=true;//是否需要绘制路线
+	protected static final boolean NEEDINTERVAL = true;//绘制路线时是否需要时间间隔
+	protected static final long INTERVALTIME=1000;//绘制路线时的时间间隔
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -56,7 +59,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		neighborTable = new HashMap<Integer, NeighborTable>();
 		header = new HashMap<Integer, PacketHeader>();
 		neighborsOf2Hops = new HashMap<Integer, Integer[]>();
-		k = 1;
+		k = 2;
 		needInitialization = true;
 		routingPath = new HashMap<Integer, List<Integer>>();
 		available = new HashMap<Integer, Boolean>();
@@ -382,6 +385,44 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	 */
 	private void checkPacketHeaderAccordingToFlowTable(final int currentID, final PacketHeader packetHeader,
 			List<Integer> path) {
+		if (NEEDPAINTING) {
+			if (currentID != controllerID) {
+				final Integer preHopID = path.get(path.indexOf(currentID) - 1);
+				if (preHopID == controllerID) {
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
+						}
+					});
+				} else {
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.AwakeNodeColorRGB);
+						}
+					});
+				}
+				NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						NetTopoApp.getApp().getPainter().paintConnection(preHopID, currentID,
+								NodeConfiguration.lineConnectPathColor);
+					}
+				});
+			}
+			NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					if (NEEDINTERVAL) {
+						try {
+							Thread.sleep(INTERVALTIME);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} 
+					}
+					NetTopoApp.getApp().refresh();
+					NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
+				}
+			});
+		}
 		if (packetHeader.getType() == 0) {
 			if (packetHeader.getBehavior() == 0) {
 				if (packetHeader.getFlag() == 0) {
@@ -393,46 +434,28 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				if (packetHeader.getDestination() == currentID) {
 					if (packetHeader.getState() == 0) {
 						setAwake(currentID, false);
-						NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
-							public void run() {
-								
-								NetTopoApp.getApp().refresh();
-								try {
-									Thread.sleep(500);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
+						if (NEEDPAINTING) {
+							NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+								public void run() {
+									NetTopoApp.getApp().refresh();
+									if (NEEDINTERVAL) {
+										try {
+											Thread.sleep(INTERVALTIME);
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										} 
+									}
+									NetTopoApp.getApp().getPainter().paintNode(currentID,
+											NodeConfiguration.SleepNodeColorRGB);
 								}
-								NetTopoApp.getApp().getPainter().paintNode(currentID,
-										NodeConfiguration.SleepNodeColorRGB);
-								app.refresh();
-							}
-						});
+							});
+						}
 					} else {
 						setAwake(currentID, true);
 					}
 				} else {
 					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
-					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							NetTopoApp.getApp().refresh();
-							if (currentID!=controllerID) {
-								
-								NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.AwakeNodeColorRGB);
-							}
-							NetTopoApp.getApp().getPainter().paintConnection(currentID, nextHopID,
-									NodeConfiguration.lineConnectPathColor);
-							
-							if (nextHopID != packetHeader.getDestination()) {
-								NetTopoApp.getApp().getPainter().paintNode(nextHopID, NodeConfiguration.NodeInPathColor);
-							}
-							try {
-								Thread.sleep(1000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-
-						}
-					});
+					
 					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
 
 				}
