@@ -50,7 +50,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	private int controllerID;
 	final private static boolean NEEDPAINTING = true;// 是否需要绘制路线
 	protected static final boolean NEEDINTERVAL = true;// 绘制路线时是否需要时间间隔
-	protected static final long INTERVALTIME = 0;// 绘制路线时的时间间隔
+	protected static final long INTERVALTIME = 100;// 绘制路线时的时间间隔
 
 	public SDN_CKN_MAIN2_MutilThread(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -83,7 +83,19 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 				app.refresh();
 			}
 		});
+		final StringBuffer message = new StringBuffer();
+		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
+		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
+				+ Arrays.toString(activeSensorNodes));
 
+		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+			public void run() {
+				NetTopoApp.getApp().refresh();
+				NetTopoApp.getApp().addLog(message.toString());
+//				resetColorAfterCKN();
+//				app.cmd_repaintNetwork();
+			}
+		});
 	}
 
 	/**
@@ -356,20 +368,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 			
 		}
 
-		final StringBuffer message = new StringBuffer();
-		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
-		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
-				+ Arrays.toString(activeSensorNodes));
-
-		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
-			public void run() {
-				NetTopoApp.getApp().refresh();
-				NetTopoApp.getApp().addLog(message.toString());
-//				resetColorAfterCKN();
-//				app.cmd_repaintNetwork();
-			}
-		});
-		System.out.println();
+		
 	}
 
 	/**
