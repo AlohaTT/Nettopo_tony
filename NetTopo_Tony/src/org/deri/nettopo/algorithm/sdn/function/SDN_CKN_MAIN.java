@@ -48,11 +48,10 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
 	private int controllerID;
-	final private static boolean NEEDPAINTING=true;//是否需要绘制路线
-	protected static final boolean NEEDINTERVAL = true;//绘制路线时是否需要时间间隔
-	protected static final long INTERVALTIME=0;//绘制路线时的时间间隔
-	protected static final boolean RETAINPATH=true;//是否保留路线
-	
+	private static boolean NEEDPAINTING = true;// 是否需要绘制路线
+	protected static final boolean NEEDINTERVAL = true;// 绘制路线时是否需要时间间隔
+	protected static final long INTERVALTIME = 0;// 绘制路线时的时间间隔
+	protected static final boolean RETAINPATH = true;// 是否保留路线
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
 		this.algorithm = algorithm;
@@ -101,12 +100,14 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		if (isNeedInitialization()) {
 			initializeWork();
 		}
+		setNEEDPAINTING(false);
 		CKN_Function();
 		CKN_Function();
 	}
 
 	/****************************************************************************/
 
+	
 	/**
 	 * 
 	 * @return the ranks between 0 and 1, and with id as the key
@@ -120,6 +121,20 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			tempRanks.put(new Integer(id), new Double(rank));
 		}
 		return tempRanks;
+	}
+
+	/**
+	 * @return the nEEDPAINTING
+	 */
+	public static boolean isNEEDPAINTING() {
+		return NEEDPAINTING;
+	}
+
+	/**
+	 * @param nEEDPAINTING the nEEDPAINTING to set
+	 */
+	public static void setNEEDPAINTING(boolean nEEDPAINTING) {
+		NEEDPAINTING = nEEDPAINTING;
 	}
 
 	private void initializeAwake() {
@@ -140,7 +155,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 
 	private void initializeNeighbors() {
-		int[] ids = wsn.getAllSensorNodesID();
+		int[] ids = wsn.getAllNodesID();
 		for (int i = 0; i < ids.length; i++) {
 			Integer ID = new Integer(ids[i]);
 			Integer[] neighbor = getNeighbor(ids[i]);
@@ -149,7 +164,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	}
 
 	private void initializeNeighborsOf2Hops() {
-		int[] ids = wsn.getAllSensorNodesID();
+		int[] ids = wsn.getAllNodesID();
 		for (int i = 0; i < ids.length; i++) {
 			Integer[] neighbor1 = neighbors.get(new Integer(ids[i]));
 			HashSet<Integer> neighborOf2Hops = new HashSet<Integer>(Arrays.asList(neighbor1));
@@ -323,7 +338,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
 				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
 		controllerID = wsn.getSinkNodeId()[0];
-		
+
 		Iterator<Integer> iterator = nodeNeighborGreaterThanK.iterator();
 		while (iterator.hasNext()) {
 			Integer currentID = iterator.next();
@@ -345,35 +360,37 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 			}
 
 		}
-		
+
 		final StringBuffer message = new StringBuffer();
 		int[] activeSensorNodes = app.getNetwork().getSensorActiveNodes();
 		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
 				+ Arrays.toString(activeSensorNodes));
 
-		app.getDisplay().asyncExec(new Runnable() {
-			public void run() {
-				app.addLog(message.toString());
-				if (!RETAINPATH) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+		if (NEEDPAINTING) {
+			app.getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					app.addLog(message.toString());
+					if (!RETAINPATH) {
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						resetColorAfterCKN();
+						app.cmd_repaintNetwork();
 					}
-					resetColorAfterCKN();
-					app.cmd_repaintNetwork();
+					app.refresh();
 				}
-				app.refresh();
-			}
-		});
-		System.out.println();
+			});
+		}
 	}
 
 	/**
 	 * @param currentID
-	 * @param destinationID 目标节点
-	 * @param path 路径
+	 * @param destinationID
+	 *            目标节点
+	 * @param path
+	 *            路径
 	 */
 	private void sendActionPacket(int destinationID, int currentID, List<Integer> path) {
 
@@ -405,8 +422,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 							app.getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
 						}
 					});
-				}
-				else {
+				} else {
 					app.getDisplay().asyncExec(new Runnable() {
 						public void run() {
 							app.getPainter().paintNode(preHopID, NodeConfiguration.AwakeNodeColorRGB);
@@ -415,25 +431,25 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 				}
 				app.getDisplay().asyncExec(new Runnable() {
 					public void run() {
-						app.getPainter().paintConnection(preHopID, currentID,
-								NodeConfiguration.lineConnectPathColor);
+						app.getPainter().paintConnection(preHopID, currentID, NodeConfiguration.lineConnectPathColor);
 					}
 				});
 			}
-			app.getDisplay().asyncExec(new Runnable() {
-				public void run() {
-					if (NEEDINTERVAL) {
-						try {
-							Thread.sleep(INTERVALTIME);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} 
+			if (NEEDPAINTING) {
+				app.getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						if (NEEDINTERVAL) {
+							try {
+								Thread.sleep(INTERVALTIME);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						app.refresh();
+						app.getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
 					}
-					app.refresh();
-					app.getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
-				}
-			});
+				});
+			}
 		}
 		if (packetHeader.getType() == 0) {
 			if (packetHeader.getBehavior() == 0) {
@@ -455,10 +471,9 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 											Thread.sleep(INTERVALTIME);
 										} catch (InterruptedException e) {
 											e.printStackTrace();
-										} 
+										}
 									}
-									app.getPainter().paintNode(currentID,
-											NodeConfiguration.SleepNodeColorRGB);
+									app.getPainter().paintNode(currentID, NodeConfiguration.SleepNodeColorRGB);
 								}
 							});
 						}
@@ -466,10 +481,11 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 						setAwake(currentID, true);
 					}
 				} else {
-					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
-					
-					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
-
+					if (!path.isEmpty()) {
+						
+						Integer nextHopID = path.get(path.indexOf(currentID) + 1);
+						checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
+					}
 				}
 			}
 		} else {
@@ -484,17 +500,17 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		ranks = getRankForAllNodes();
 		initializeNeighbors();
 		initialNeiborTable();
-//		initializeHeader();
+		// initializeHeader();
 		initializeNeighborsOf2Hops();
 		initializeAvailable();
-		routingPath.clear();
+		// routingPath.clear();
 	}
 
 	/**
 	 * 
 	 */
 	private void initializeAvailable() {
-		int[] allSensorNodesID = wsn.getAllSensorNodesID();
+		int[] allSensorNodesID = wsn.getAllNodesID();
 		for (int id : allSensorNodesID) {
 			available.put(id, true);
 		}

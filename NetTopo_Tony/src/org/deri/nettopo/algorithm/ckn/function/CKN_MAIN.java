@@ -98,7 +98,7 @@ public class CKN_MAIN implements AlgorFunc {
 		do {
 			CKN_Function();
 			lifeTime++;
-			System.out.println("lifeTime:" + lifeTime);
+//			System.out.println("lifeTime:" + lifeTime);
 		}
 
 		while (!hasNodeDie());
@@ -350,20 +350,20 @@ public class CKN_MAIN implements AlgorFunc {
 		return temp_Eranks;
 	}
 
-	private void CKN_Function() { // 并没有计算能量
+	private void CKN_Function() { // 锟斤拷没锟叫硷拷锟斤拷锟斤拷锟斤拷
 
 		/***********
 		 * Likun 1.16
 		 */
 		if (!isinit) {
-			Eranks = initializeHashMapEranks(); // 这里应该有一个getErankForAllNodes()
+			Eranks = initializeHashMapEranks(); // 锟斤拷锟斤拷应锟斤拷锟斤拷一锟斤拷getErankForAllNodes()
 			isinit = true;
 		}
 		/****
 		 * end******* Likun 1.16
 		 */
 
-		ranks = getRankForAllNodes(); // 获得所有产生的rank值
+		ranks = getRankForAllNodes(); // 锟斤拷锟斤拷锟斤拷胁锟斤拷锟斤拷锟絩ank值
 		initializeNeighbors();
 		initializeNeighborsOf2Hops();
 		int[] disordered = Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID());// generate
@@ -372,7 +372,7 @@ public class CKN_MAIN implements AlgorFunc {
 			int currentID = disordered[i];
 			Integer[] Nu = getAwakeNeighbors(currentID);// Nu is the
 														// currentAwakeNeighbor,
-														// 所有醒的邻居节点
+														// 锟斤拷锟斤拷锟窖碉拷锟节居节碉拷
 			if (Nu.length < k || isOneOfAwakeNeighborsNumLessThanK(currentID)) {
 				this.setAwake(currentID, true);
 				energyModify(currentID);

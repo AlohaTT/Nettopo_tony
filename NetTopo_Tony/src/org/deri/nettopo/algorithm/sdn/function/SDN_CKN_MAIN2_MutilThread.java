@@ -53,7 +53,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	private HashMap<Integer, List<Integer>> routingPath;
 	private HashMap<Integer, Boolean> available;
 	private int controllerID;
-	final private static boolean NEEDPAINTING = true;// 是否需要绘制路线
+	private static boolean NEEDPAINTING = true;// 是否需要绘制路线
 	protected static final boolean NEEDINTERVAL = true;// 绘制路线时是否需要时间间隔
 	protected static final long INTERVALTIME = 0;// 绘制路线时的时间间隔
 
@@ -86,7 +86,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 				app.refresh();
 			}
 		});
-		
+
 		final StringBuffer message = new StringBuffer();
 		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
 		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
@@ -95,9 +95,9 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 			public void run() {
 				NetTopoApp.getApp().refresh();
 				NetTopoApp.getApp().addLog(message.toString());
-//				resetColorAfterCKN();
-//				app.cmd_repaintNetwork();
-//				System.out.println(Thread.currentThread().toString());
+				// resetColorAfterCKN();
+				// app.cmd_repaintNetwork();
+				// System.out.println(Thread.currentThread().toString());
 			}
 		});
 
@@ -117,11 +117,27 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 		if (isNeedInitialization()) {
 			initializeWork();
 		}
+		setNEEDPAINTING(false);
 		CKN_Function();
 		CKN_Function();
 	}
 
+	
 	/****************************************************************************/
+
+	/**
+	 * @return the nEEDPAINTING
+	 */
+	public static boolean isNEEDPAINTING() {
+		return NEEDPAINTING;
+	}
+
+	/**
+	 * @param nEEDPAINTING the nEEDPAINTING to set
+	 */
+	public static void setNEEDPAINTING(boolean nEEDPAINTING) {
+		NEEDPAINTING = nEEDPAINTING;
+	}
 
 	/**
 	 * 
@@ -365,7 +381,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 								e.printStackTrace();
 							}
 						}
-						
+
 					});
 
 				} else {
@@ -380,7 +396,6 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
 
 	}
 
@@ -432,6 +447,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 						}
 					});
 				}
+
 				NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 
 					public void run() {
@@ -439,22 +455,20 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 								NodeConfiguration.lineConnectPathColor);
 					}
 				});
-
-			}
-
-			NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
-				public void run() {
-					if (NEEDINTERVAL) {
-						try {
-							Thread.sleep(INTERVALTIME);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+				NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						if (NEEDINTERVAL) {
+							try {
+								Thread.sleep(INTERVALTIME);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 						}
+						NetTopoApp.getApp().refresh();
+						NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
 					}
-					NetTopoApp.getApp().refresh();
-					NetTopoApp.getApp().getPainter().paintNode(currentID, NodeConfiguration.NodeInPathColor);
-				}
-			});
+				});
+			}
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
@@ -496,9 +510,11 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 						setAwake(currentID, true);
 					}
 				} else {
-					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
+					if (!path.isEmpty()) {
 
-					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
+						final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
+						checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
+					}
 
 				}
 			}

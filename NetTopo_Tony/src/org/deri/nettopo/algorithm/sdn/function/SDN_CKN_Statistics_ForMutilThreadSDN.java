@@ -1,17 +1,17 @@
 package org.deri.nettopo.algorithm.sdn.function;
 
-import org.apache.log4j.Logger;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.util.Random;
+
 import org.deri.nettopo.app.NetTopoApp;
-import org.deri.nettopo.network.*;
-import org.deri.nettopo.node.SensorNode;
+import org.deri.nettopo.network.WirelessSensorNetwork;
 import org.deri.nettopo.node.sdn.Controller_SinkNode;
 import org.deri.nettopo.node.sdn.SensorNode_SDN;
-import org.deri.nettopo.util.*;
+import org.deri.nettopo.util.Coordinate;
+import org.deri.nettopo.util.DuplicateCoordinateException;
 
-import java.util.*;
-import java.io.*;
-
-public class SDN_CKN_Statistics {
+public class SDN_CKN_Statistics_ForMutilThreadSDN {
 //	private static Logger logger = Logger.getLogger(SDN_CKN_Statistics.class);
 
 	private static final int SEED_NUM = 100;
@@ -46,7 +46,7 @@ public class SDN_CKN_Statistics {
 	/** logWriter is to write to the file of "C:/CKN_Stat.log" */
 	private PrintWriter logWriter;
 
-	public SDN_CKN_Statistics() throws Exception {
+	public SDN_CKN_Statistics_ForMutilThreadSDN() throws Exception {
 		maxK = 10;
 		seedNum = SEED_NUM;
 		sensorNodeNum = 0;
@@ -140,12 +140,12 @@ public class SDN_CKN_Statistics {
 				sNode.setMaxTR(getMax_tr());
 				wsn.addNode(sNode, coordinates[j]);
 			}
-			SDN_CKN_MAIN ckn = new SDN_CKN_MAIN();
+			SDN_CKN_MAIN2_MutilThread ckn = new SDN_CKN_MAIN2_MutilThread();
 			ckn.setK(k);
 			ckn.runForStatistics();
 			int sleepNum = nodeNum - wsn.getSensorNodesActiveNum();
 			float sleepRate = sleepNum * 1.0f / nodeNum;
-			SDN_CKN_MutilThreadStatisticsMeta meta = new SDN_CKN_MutilThreadStatisticsMeta(k, nodeNum, sleepNum, sleepRate);
+			SDN_CKNStatisticsMeta meta = new SDN_CKNStatisticsMeta(k, nodeNum, sleepNum, sleepRate);
 			System.out.println(meta);
 			if (sleepRate > maxRate) {
 				maxRate = sleepRate;
@@ -160,7 +160,7 @@ public class SDN_CKN_Statistics {
 		}
 
 		double totalAverageSleepRate = totalSleepNum * 1.0f / totalNum;
-		SDN_CKN_MutilThreadStatisticsMeta oneMeta = new SDN_CKN_MutilThreadStatisticsMeta(k, nodeNum, nodeNum * totalAverageSleepRate,
+		SDN_CKNStatisticsMeta oneMeta = new SDN_CKNStatisticsMeta(k, nodeNum, nodeNum * totalAverageSleepRate,
 				totalAverageSleepRate);
 		logWriter.println(oneMeta.toString() + "          " + maxRateStr + "  " + minRateStr);
 		logWriter.flush();
@@ -200,10 +200,10 @@ public class SDN_CKN_Statistics {
 	}
 
 	public static void main(String[] args) throws Exception {
-		SDN_CKN_Statistics statistics = new SDN_CKN_Statistics();
-		System.out.println(SDN_CKN_MutilThreadStatisticsMeta.outputHeader());
-		statistics.getLogWriter().println(SDN_CKN_MutilThreadStatisticsMeta.NET_INFO_HEAD());
-		statistics.getLogWriter().println(SDN_CKN_MutilThreadStatisticsMeta.outputHeader());
+		SDN_CKN_Statistics_ForMutilThreadSDN statistics = new SDN_CKN_Statistics_ForMutilThreadSDN();
+		System.out.println(SDN_CKNStatisticsMeta.outputHeader());
+		statistics.getLogWriter().println(SDN_CKNStatisticsMeta.NET_INFO_HEAD());
+		statistics.getLogWriter().println(SDN_CKNStatisticsMeta.outputHeader());
 
 		/*
 		 * i decides the k j*100 decides the nodeNum
@@ -221,9 +221,9 @@ public class SDN_CKN_Statistics {
 
 }
 
-class SDN_CKNStatisticsMeta implements Serializable {
-	private static int NET_WIDTH = SDN_CKN_Statistics.getNET_WIDTH();
-	private static int NET_HEIGHT = SDN_CKN_Statistics.getNET_HEIGHT();
+class SDN_CKN_MutilThreadStatisticsMeta implements Serializable {
+	private static int NET_WIDTH = SDN_CKN_Statistics_ForMutilThreadSDN.getNET_WIDTH();
+	private static int NET_HEIGHT = SDN_CKN_Statistics_ForMutilThreadSDN.getNET_HEIGHT();
 
 	public static int getNET_WIDTH() {
 		return NET_WIDTH;
@@ -238,21 +238,21 @@ class SDN_CKNStatisticsMeta implements Serializable {
 	private double sleepNodes;
 	private double sleepRate;
 
-	public SDN_CKNStatisticsMeta() {
+	public SDN_CKN_MutilThreadStatisticsMeta() {
 		k = 0;
 		sleepNodes = 0;
 		totalNodes = 0;
 		sleepRate = sleepNodes / totalNodes;
 	}
 
-	public SDN_CKNStatisticsMeta(int k, int totalNodes, int sleepNodes, float sleepRate) {
+	public SDN_CKN_MutilThreadStatisticsMeta(int k, int totalNodes, int sleepNodes, float sleepRate) {
 		this.k = k;
 		this.totalNodes = totalNodes;
 		this.sleepNodes = sleepNodes;
 		this.sleepRate = sleepRate;
 	}
 
-	public SDN_CKNStatisticsMeta(int k, int totalNodes, double sleepNodes, double sleepRate) {
+	public SDN_CKN_MutilThreadStatisticsMeta(int k, int totalNodes, double sleepNodes, double sleepRate) {
 		this.k = k;
 		this.totalNodes = totalNodes;
 		this.sleepNodes = sleepNodes;

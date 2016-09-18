@@ -47,7 +47,7 @@ public class CKN_Statistics {
 		netSize = new Coordinate(NET_WIDTH, NET_HEIGHT, 0);
 		max_tr = MAX_TR;
 		wsn = new WirelessSensorNetwork();
-		logWriter = new PrintWriter("C:/CKN_Stat.log");
+//		logWriter = new PrintWriter("C:/CKN_Stat.log");
 		
 		wsn.setSize(netSize);
 		NetTopoApp.getApp().setNetwork(wsn);
@@ -133,8 +133,8 @@ public class CKN_Statistics {
 		}
 		double totalAverageSleepRate = totalSleepNum * 1.0f / totalNum;
 		CKNStatisticsMeta oneMeta = new CKNStatisticsMeta(k,nodeNum,nodeNum * totalAverageSleepRate,totalAverageSleepRate);
-		logWriter.println(oneMeta.toString() + "          " +maxRateStr + "  " + minRateStr);
-		logWriter.flush();
+//		logWriter.println(oneMeta.toString() + "          " +maxRateStr + "  " + minRateStr);
+//		logWriter.flush();
 	}
 	
 	/**
@@ -167,8 +167,8 @@ public class CKN_Statistics {
 	public static void main(String[] args) throws Exception {
 		CKN_Statistics statistics = new CKN_Statistics();
 		System.out.println(CKNStatisticsMeta.outputHeader());
-		statistics.getLogWriter().println(CKNStatisticsMeta.NET_INFO_HEAD());
-		statistics.getLogWriter().println(CKNStatisticsMeta.outputHeader());
+//		statistics.getLogWriter().println(CKNStatisticsMeta.NET_INFO_HEAD());
+//		statistics.getLogWriter().println(CKNStatisticsMeta.outputHeader());
 		
 		/* i decides the k
 		 * j*100 decides the nodeNum
