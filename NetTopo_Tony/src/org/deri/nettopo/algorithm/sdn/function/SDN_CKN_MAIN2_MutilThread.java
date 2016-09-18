@@ -3,13 +3,18 @@ package org.deri.nettopo.algorithm.sdn.function;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.deri.nettopo.algorithm.AlgorFunc;
@@ -37,7 +42,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	private NetTopoApp app;
 	private HashMap<Integer, Double> ranks;
 	private HashMap<Integer, Integer[]> neighbors;
-	private HashMap<Integer, Boolean> awake;
+	private Map<Integer, Boolean> awake;
 	private int k;// the least awake neighbors
 	boolean needInitialization;
 	private HashMap<Integer, PacketHeader> header;
@@ -50,12 +55,12 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	private int controllerID;
 	final private static boolean NEEDPAINTING = true;// 是否需要绘制路线
 	protected static final boolean NEEDINTERVAL = true;// 绘制路线时是否需要时间间隔
-	protected static final long INTERVALTIME = 100;// 绘制路线时的时间间隔
+	protected static final long INTERVALTIME = 0;// 绘制路线时的时间间隔
 
 	public SDN_CKN_MAIN2_MutilThread(Algorithm algorithm) {
 		this.algorithm = algorithm;
 		neighbors = new HashMap<Integer, Integer[]>();
-		awake = new HashMap<Integer, Boolean>();
+		awake = Collections.synchronizedMap(new HashMap<Integer, Boolean>());
 		neighborTable = new HashMap<Integer, NeighborTable>();
 		header = new HashMap<Integer, PacketHeader>();
 		neighborsOf2Hops = new HashMap<Integer, Integer[]>();
@@ -75,27 +80,27 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 		}
 		resetAllNodesAwakeColor();
 		CKN_Function();
-		// resetColorAfterCKN();
 		app.getPainter().rePaintAllNodes();
-		// paintConnections();
 		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				app.refresh();
 			}
 		});
+		
 		final StringBuffer message = new StringBuffer();
 		int[] activeSensorNodes = NetTopoApp.getApp().getNetwork().getSensorActiveNodes();
 		message.append("k=" + k + ", Number of active nodes is:" + activeSensorNodes.length + ", they are: "
 				+ Arrays.toString(activeSensorNodes));
-
-		NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				NetTopoApp.getApp().refresh();
 				NetTopoApp.getApp().addLog(message.toString());
 //				resetColorAfterCKN();
 //				app.cmd_repaintNetwork();
+//				System.out.println(Thread.currentThread().toString());
 			}
 		});
+
 	}
 
 	/**
@@ -330,6 +335,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	}
 
 	private void CKN_Function() {
+		ExecutorService pool = Executors.newCachedThreadPool();
 		initialWork();
 		Collection<Integer> nodeNeighborGreaterThanK = getNodeNeighborGreaterThank(
 				Util.generateDisorderedIntArrayWithExistingArray(wsn.getAllSensorNodesID()));// 获得所有邻居节点数大于K的节点
@@ -350,25 +356,32 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 					initializeAvailable();
 					final List<Integer> path = findOnePath(false, currentID, controllerID);
 					routingPath.put(currentID, path);
-					new Thread(new Runnable() {
+					pool.execute(new Runnable() {
 						public void run() {
 							sendActionPacket(currentID, controllerID, path);
 							try {
 								Thread.sleep(1);
 							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 						}
-					}).start();;
+						
+					});
+
 				} else {
 					setAwake(currentID, true);
 				}
 			}
-			
-		}
 
+		}
+		pool.shutdown();
+		try {
+			pool.awaitTermination(10, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
+
 	}
 
 	/**
@@ -395,7 +408,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 	 */
 	private void checkPacketHeaderAccordingToFlowTable(final int currentID, final PacketHeader packetHeader,
 			List<Integer> path) {
-		
+
 		if (NEEDPAINTING) {
 			if (currentID != controllerID) {
 				final Integer preHopID = path.get(path.indexOf(currentID) - 1);
@@ -403,6 +416,13 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 						public void run() {
 							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
+						}
+					});
+				} else if (awake.get(preHopID) == false) {
+					NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+
+						public void run() {
+							NetTopoApp.getApp().getPainter().paintNode(preHopID, NodeConfiguration.SleepNodeColorRGB);
 						}
 					});
 				} else {
@@ -413,20 +433,21 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 					});
 				}
 				NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
+
 					public void run() {
 						NetTopoApp.getApp().getPainter().paintConnection(preHopID, currentID,
 								NodeConfiguration.lineConnectPathColor);
 					}
 				});
-				
+
 			}
+
 			NetTopoApp.getApp().getDisplay().asyncExec(new Runnable() {
 				public void run() {
 					if (NEEDINTERVAL) {
 						try {
 							Thread.sleep(INTERVALTIME);
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
@@ -437,11 +458,14 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		if (packetHeader.getType() == 0) {
+
+		// 根据flowtable来check
+		if (packetHeader.getType() == 0)
+
+		{
 			if (packetHeader.getBehavior() == 0) {
 				if (packetHeader.getFlag() == 0) {
 
@@ -473,7 +497,7 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 					}
 				} else {
 					final Integer nextHopID = path.get(path.indexOf(currentID) + 1);
-				
+
 					checkPacketHeaderAccordingToFlowTable(nextHopID, packetHeader, path);
 
 				}
@@ -591,8 +615,8 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 
 	public LinkedList<Integer> findOnePath(boolean needPainting, Integer currentID, Integer controllerId) {
 		wsn = NetTopoApp.getApp().getNetwork();
-		LinkedList<Integer> path = new LinkedList<Integer>();// ���ڴ洢·��
-		ArrayList<Integer> searched = new ArrayList<Integer>();// ���ڴ洢�Ѿ���ѯ���Ľڵ�
+		LinkedList<Integer> path = new LinkedList<Integer>();
+		ArrayList<Integer> searched = new ArrayList<Integer>();
 		if (NetTopoApp.getApp().isFileModified()) {
 			wsn.resetAllNodesAvailable();
 			initializeAvailable();
@@ -672,7 +696,6 @@ public class SDN_CKN_MAIN2_MutilThread implements AlgorFunc {
 		for (int i = 0; i < neighborsID.size(); i++) {
 			int neighborID = neighborsID.get(0);
 			if (canReachSink(neighborID, controllerId, path, searched)) {
-				// System.out.println(neighbor.getID() + " can get sink");
 				path.add(currentId);
 				available.put(currentId, false); // the node cannot be used next
 													// time

@@ -5,7 +5,6 @@ import java.util.TimerTask;
 
 import org.deri.nettopo.algorithm.AlgorFunc;
 import org.deri.nettopo.algorithm.Algorithm;
-import org.deri.nettopo.algorithm.ckn.function.CKN_MAIN;
 import org.deri.nettopo.algorithm.tpgf.Algor_TPGF;
 import org.deri.nettopo.algorithm.tpgf.function.TPGF_FindOnePath;
 import org.deri.nettopo.app.NetTopoApp;

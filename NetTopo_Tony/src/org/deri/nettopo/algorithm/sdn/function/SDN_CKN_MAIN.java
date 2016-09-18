@@ -51,7 +51,7 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 	final private static boolean NEEDPAINTING=true;//是否需要绘制路线
 	protected static final boolean NEEDINTERVAL = true;//绘制路线时是否需要时间间隔
 	protected static final long INTERVALTIME=0;//绘制路线时的时间间隔
-	protected static final boolean RETAINPATH=false;//绘制路线时的时间间隔
+	protected static final boolean RETAINPATH=true;//是否保留路线
 	
 
 	public SDN_CKN_MAIN(Algorithm algorithm) {
@@ -354,7 +354,13 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 		app.getDisplay().asyncExec(new Runnable() {
 			public void run() {
 				app.addLog(message.toString());
-				if (RETAINPATH) {
+				if (!RETAINPATH) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					resetColorAfterCKN();
 					app.cmd_repaintNetwork();
 				}
@@ -366,6 +372,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 
 	/**
 	 * @param currentID
+	 * @param destinationID 目标节点
+	 * @param path 路径
 	 */
 	private void sendActionPacket(int destinationID, int currentID, List<Integer> path) {
 
@@ -397,7 +405,8 @@ public class SDN_CKN_MAIN implements AlgorFunc {
 							app.getPainter().paintNode(preHopID, NodeConfiguration.SinkNodeColorRGB);
 						}
 					});
-				} else {
+				}
+				else {
 					app.getDisplay().asyncExec(new Runnable() {
 						public void run() {
 							app.getPainter().paintNode(preHopID, NodeConfiguration.AwakeNodeColorRGB);
